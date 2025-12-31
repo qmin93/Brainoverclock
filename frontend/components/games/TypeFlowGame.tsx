@@ -121,14 +121,39 @@ export default function TypeFlowGame() {
         }
     }, [status, wpm, mode, userInput, currentQuote.text]);
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (status === 'running') playClick();
+    // Global Keyboard Input Listener
+    useEffect(() => {
+        const handleGlobalKeyDown = (e: KeyboardEvent) => {
+            // 1. Check if game is playing
+            if (status !== 'running') return;
 
-        // Block Backspace in Sudden Death
-        if (mode === 'sudden-death' && e.key === 'Backspace') {
+            // 2. Ignore functional keys except Backspace
+            if (e.key.length > 1 && e.key !== 'Backspace') {
+                return;
+            }
+
             e.preventDefault();
-        }
-    };
+            playClick();
+
+            // 3. Handle Backspace
+            if (e.key === 'Backspace') {
+                // In Sudden Death, Backspace might be blocked or allowed depending on rules.
+                // Store logic handles input updates, but we can prevention here if needed.
+                if (mode === 'sudden-death') return;
+
+                handleInput(userInput.slice(0, -1));
+                return;
+            }
+
+            // 4. Handle Character Input
+            // Pass the constructed string to store's handleInput which validates and updates state
+            handleInput(userInput + e.key);
+        };
+
+        window.addEventListener('keydown', handleGlobalKeyDown);
+        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    }, [status, mode, userInput, handleInput, currentQuote.text]);
+
 
     const renderText = () => {
         const chars = currentQuote.text.split('');
@@ -333,8 +358,7 @@ export default function TypeFlowGame() {
                             type="text"
                             className="opacity-0 absolute inset-0 w-full h-full cursor-default z-50"
                             value={userInput}
-                            onChange={(e) => handleInput(e.target.value)}
-                            onKeyDown={handleKeyDown}
+                            readOnly
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             autoComplete="off"
