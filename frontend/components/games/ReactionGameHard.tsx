@@ -112,77 +112,79 @@ export default function ReactionGameHard() {
     };
 
     return (
-        <div
-            className={`w-full h-full flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 select-none ${getBackgroundColor()}`}
-            onMouseDown={handleClick}
-        >
-            <div className="text-white text-center max-w-2xl px-4 pointer-events-none">
-                {state === "idle" && (
-                    <div className="flex flex-col items-center gap-6">
-                        <Zap className="w-24 h-24 text-rose-500" />
-                        <h1 className="text-5xl font-bold">Reaction Time (Hard)</h1>
-                        <p className="text-2xl opacity-80 max-w-md">
-                            Click on <span className="text-emerald-400 font-bold">GREEN</span> only.<br />
-                            Ignore <span className="text-blue-400 font-bold">BLUE</span> and <span className="text-orange-400 font-bold">ORANGE</span>.
-                        </p>
-                        <p className="text-xl font-medium mt-4 bg-white/10 px-6 py-3 rounded-full">Click to start</p>
-                    </div>
-                )}
-
-                {state === "waiting" && (
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="w-20 h-20 rounded-full bg-white/20 animate-pulse" />
-                        <h1 className="text-6xl font-bold">Wait for Green...</h1>
-                    </div>
-                )}
-
-                {state === "distraction" && (
-                    <div className="flex flex-col items-center gap-6">
-                        <AlertOctagon className="w-24 h-24 text-white" />
-                        <h1 className="text-6xl font-bold">DON'T CLICK!</h1>
-                    </div>
-                )}
-
-                {state === "now" && (
-                    <div className="flex flex-col items-center gap-6">
-                        <MousePointer2 className="w-24 h-24" />
-                        <h1 className="text-7xl font-bold">CLICK!</h1>
-                    </div>
-                )}
-
-                {state === "failed" && (
-                    <div className="flex flex-col items-center gap-6">
-                        <AlertTriangle className="w-24 h-24 text-orange-500" />
-                        <h1 className="text-5xl font-bold">Distracted!</h1>
-                        <p className="text-2xl opacity-80">You clicked on the wrong color.</p>
-                        <div className="flex items-center gap-2 mt-8 opacity-60">
-                            <RefreshCcw className="w-6 h-6" />
-                            <span className="text-xl">Click to try again</span>
+        <>
+            <div
+                className={`w-full h-full flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 select-none ${getBackgroundColor()}`}
+                onMouseDown={handleClick}
+            >
+                <div className="text-white text-center max-w-2xl px-4 pointer-events-none">
+                    {state === "idle" && (
+                        <div className="flex flex-col items-center gap-6">
+                            <Zap className="w-24 h-24 text-rose-500" />
+                            <h1 className="text-5xl font-bold">Reaction Time (Hard)</h1>
+                            <p className="text-2xl opacity-80 max-w-md">
+                                Click on <span className="text-emerald-400 font-bold">GREEN</span> only.<br />
+                                Ignore <span className="text-blue-400 font-bold">BLUE</span> and <span className="text-orange-400 font-bold">ORANGE</span>.
+                            </p>
+                            <p className="text-xl font-medium mt-4 bg-white/10 px-6 py-3 rounded-full">Click to start</p>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {state === "tooEarly" && (
-                    <div className="flex flex-col items-center gap-6">
-                        <AlertTriangle className="w-24 h-24 text-rose-500" />
-                        <h1 className="text-5xl font-bold">Too Early!</h1>
-                        <p className="text-2xl opacity-80">Wait for the Green screen.</p>
-                        <div className="flex items-center gap-2 mt-8 opacity-60">
-                            <span className="text-xl">Click to try again</span>
+                    {state === "waiting" && (
+                        <div className="flex flex-col items-center gap-6">
+                            <div className="w-20 h-20 rounded-full bg-white/20 animate-pulse" />
+                            <h1 className="text-6xl font-bold">Wait for Green...</h1>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {state === "result" && (
-                    <ResultModal
-                        isOpen={state === "result"}
-                        score={result}
-                        unit="ms"
-                        gameType="Reaction Time (Hard)"
-                        onRetry={startGame}
-                    />
-                )}
+                    {state === "distraction" && (
+                        <div className="flex flex-col items-center gap-6">
+                            <AlertOctagon className="w-24 h-24 text-white" />
+                            <h1 className="text-6xl font-bold">DON'T CLICK!</h1>
+                        </div>
+                    )}
+
+                    {state === "now" && (
+                        <div className="flex flex-col items-center gap-6">
+                            <MousePointer2 className="w-24 h-24" />
+                            <h1 className="text-7xl font-bold">CLICK!</h1>
+                        </div>
+                    )}
+
+                    {state === "failed" && (
+                        <div className="flex flex-col items-center gap-6">
+                            <AlertTriangle className="w-24 h-24 text-orange-500" />
+                            <h1 className="text-5xl font-bold">Distracted!</h1>
+                            <p className="text-2xl opacity-80">You clicked on the wrong color.</p>
+                            <div className="flex items-center gap-2 mt-8 opacity-60">
+                                <RefreshCcw className="w-6 h-6" />
+                                <span className="text-xl">Click to try again</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {state === "tooEarly" && (
+                        <div className="flex flex-col items-center gap-6">
+                            <AlertTriangle className="w-24 h-24 text-rose-500" />
+                            <h1 className="text-5xl font-bold">Too Early!</h1>
+                            <p className="text-2xl opacity-80">Wait for the Green screen.</p>
+                            <div className="flex items-center gap-2 mt-8 opacity-60">
+                                <span className="text-xl">Click to try again</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
+
+            {state === "result" && (
+                <ResultModal
+                    isOpen={state === "result"}
+                    score={result}
+                    unit="ms"
+                    gameType="Reaction Time (Hard)"
+                    onRetry={startGame}
+                />
+            )}
+        </>
     );
 }

@@ -10,7 +10,19 @@ STATS_DATA = {
     'aim_trainer': {'mean': 500, 'std_dev': 120, 'lower_is_better': True},
     'aim_trainer_hard': {'mean': 800, 'std_dev': 150, 'lower_is_better': True},
     'number_memory': {'mean': 9, 'std_dev': 2.5, 'lower_is_better': False},
-    'number_memory_hard': {'mean': 6, 'std_dev': 2.0, 'lower_is_better': False}
+    'number_memory_hard': {'mean': 6, 'std_dev': 2.0, 'lower_is_better': False},
+    'chimp_test': {'mean': 10, 'std_dev': 2.5, 'lower_is_better': False},
+    'chimp_test_hard': {'mean': 12, 'std_dev': 4, 'lower_is_better': False},
+    'type_flow': {'mean': 50, 'std_dev': 15, 'lower_is_better': False},
+    'verbal_hard': {'mean': 25, 'std_dev': 10, 'lower_is_better': False},
+    'visual_hard': {'mean': 8, 'std_dev': 3, 'lower_is_better': False},
+    'aim_hard': {'mean': 5000, 'std_dev': 2000, 'lower_is_better': False},
+    'stroop_hard': {'mean': 30, 'std_dev': 10, 'lower_is_better': False},
+    'n_back': {'mean': 3, 'std_dev': 1.2, 'lower_is_better': False},
+    'schulte_normal': {'mean': 18000, 'std_dev': 5000, 'lower_is_better': True},
+    'schulte_dynamic': {'mean': 35000, 'std_dev': 10000, 'lower_is_better': True},
+    'schulte_mixed': {'mean': 25000, 'std_dev': 8000, 'lower_is_better': True},
+    'math_fall': {'mean': 2000, 'std_dev': 800, 'lower_is_better': False}
 }
 
 def calculate_percentile(game_type, score):

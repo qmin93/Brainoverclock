@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Share2, Copy, RotateCcw, Home } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -12,6 +12,7 @@ interface ResultModalProps {
     percentile?: number;
     gameType: string;
     onRetry: () => void;
+    children?: React.ReactNode;
 }
 
 export function ResultModal({
@@ -21,7 +22,9 @@ export function ResultModal({
     percentile,
     gameType,
     onRetry,
+    children,
 }: ResultModalProps) {
+    const router = useRouter();
     const [toastMsg, setToastMsg] = useState<string | null>(null);
 
     const showToast = (msg: string) => {
@@ -52,7 +55,11 @@ export function ResultModal({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+            >
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -116,14 +123,21 @@ export function ResultModal({
                             <span>Retake</span>
                         </button>
 
-                        <Link
-                            href="/"
+                        <button
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={() => router.push('/')}
                             className="col-span-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white p-4 rounded-xl transition-all duration-200"
                         >
                             <Home className="w-5 h-5" />
                             <span>Home</span>
-                        </Link>
+                        </button>
                     </div>
+
+                    {children && (
+                        <div className="mt-4 pt-4 border-t border-white/5">
+                            {children}
+                        </div>
+                    )}
                 </motion.div>
             </div>
         </AnimatePresence>
