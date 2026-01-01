@@ -64,10 +64,10 @@ export default function ShareResult({ gameTitle, score, tier, gameUrl }: ShareRe
             {/* COPY CHALLENGE 버튼 */}
             <button
                 onClick={handleCopy}
-                className="flex items-center justify-center gap-2 w-full py-3 font-bold text-slate-900 bg-white rounded-xl hover:bg-slate-200 transition-colors active:scale-95 shadow-lg border border-transparent hover:border-slate-300"
+                className="flex items-center justify-center gap-2 w-full py-3 font-bold text-slate-900 bg-white rounded-xl hover:bg-slate-200 transition-colors active:scale-95 shadow-lg border border-transparent hover:border-slate-300 uppercase text-sm"
             >
                 <Copy size={20} />
-                COPY CHALLENGE
+                COPY AND SHARE THE RESULT
             </button>
 
             {/* Share Result 버튼 */}
