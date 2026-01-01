@@ -133,6 +133,10 @@ def save_schulte_score():
 def save_math_fall_score():
     return handle_score_submission('math_fall', request.json)
 
+@app.route('/api/score/sequence-hard', methods=['POST'])
+def save_sequence_hard_score():
+    return handle_score_submission('sequence_hard', request.json)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5328)

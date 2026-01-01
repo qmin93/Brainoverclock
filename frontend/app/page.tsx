@@ -27,7 +27,7 @@ export default function Home() {
 
         <GameColumn
           title="Sequence Memory"
-          description="Pattern Memory."
+          description="Pattern Memory. Ignore distractors."
           href="/test/sequence-memory"
           icon={Grid3X3}
           colorClass="bg-cyan-600 hover:bg-cyan-500 text-white transition-all duration-300 flex flex-col justify-center items-center p-8 h-full rounded-none"

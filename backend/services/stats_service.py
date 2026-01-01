@@ -22,7 +22,8 @@ STATS_DATA = {
     'schulte_normal': {'mean': 18000, 'std_dev': 5000, 'lower_is_better': True},
     'schulte_dynamic': {'mean': 35000, 'std_dev': 10000, 'lower_is_better': True},
     'schulte_mixed': {'mean': 25000, 'std_dev': 8000, 'lower_is_better': True},
-    'math_fall': {'mean': 2000, 'std_dev': 800, 'lower_is_better': False}
+    'math_fall': {'mean': 2000, 'std_dev': 800, 'lower_is_better': False},
+    'sequence_hard': {'mean': 10, 'std_dev': 3.5, 'lower_is_better': False}
 }
 
 def calculate_percentile(game_type, score):
