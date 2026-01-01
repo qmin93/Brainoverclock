@@ -27,29 +27,32 @@ export default function ShareResult({ gameTitle, score, tier, gameUrl }: ShareRe
 
     // Unified Handler
     const handleHybridAction = async () => {
+        const text = getShareText();
         const shareData = {
             title: `Brain Overclock: ${gameTitle}`,
-            text: getShareText(),
+            text: text,
             url: "https://brain-overclock.vercel.app",
         };
 
-        // 1. Try Native Share (Mobile)
-        if (navigator.share && navigator.canShare(shareData)) {
-            try {
-                await navigator.share(shareData);
-                return; // Shared manually
-            } catch (err) {
-                // Ignore user abort, proceed to copy if error wasn't abort
-                if ((err as Error).name === "AbortError") return;
+        // 1. Always Copy First
+        try {
+            await navigator.clipboard.writeText(text);
+            toast.success("Copy complete! Ready to share. 🔥");
+        } catch (err) {
+            console.error("Copy failed", err);
+            // If copy fails but share is available, we rely on share.
+            if (!navigator.share) {
+                toast.error("Failed to copy.");
             }
         }
 
-        // 2. Fallback to Copy (PC or Share failed)
-        try {
-            await navigator.clipboard.writeText(getShareText());
-            toast.success("Copy complete! Ready to share. 🔥");
-        } catch (err) {
-            toast.error("Failed to copy.");
+        // 2. Try Native Share (if available)
+        if (navigator.share && navigator.canShare(shareData)) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                // Ignore user abort
+            }
         }
     };
 
