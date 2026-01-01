@@ -34,6 +34,7 @@ export default function TypeFlowGame() {
     const audioContextRef = useRef<AudioContext | null>(null);
 
     // Initial focus and sounds
+    // Initial focus, sounds, and Blind Mode Timer
     useEffect(() => {
         if (status === 'running') {
             inputRef.current?.focus();
@@ -43,7 +44,10 @@ export default function TypeFlowGame() {
 
             if (mode === 'blind') {
                 setShowBlindText(true);
-                setBlindCountdown(7);
+                // Dynamic Countdown: 6s Base + 1s per Level (e.g., Lv1=7s, Lv2=8s)
+                const initialTime = 6 + level;
+                setBlindCountdown(initialTime);
+
                 const interval = setInterval(() => {
                     setBlindCountdown(prev => {
                         if (prev <= 1) {
@@ -57,13 +61,14 @@ export default function TypeFlowGame() {
                 return () => clearInterval(interval);
             }
         } else {
+            // Reset for Idle
             setShowBlindText(true);
-            setBlindCountdown(7);
+            setBlindCountdown(7); // Default reset
             setGlitch(false);
             setShake(false);
             setLastMistakes(0);
         }
-    }, [status, mode]);
+    }, [status, mode, level]); // Re-run when Level changes to restart timer
 
     // Handle Mistakes Feedback
     useEffect(() => {
