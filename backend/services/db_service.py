@@ -1,6 +1,7 @@
 
 import sqlite3
 import os
+from services.stats_service import STATS_DATA
 
 # Use absolute path for DB to avoid confusion
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -10,6 +11,38 @@ def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def get_leaderboard(game_type, limit=10):
+    """
+    Retrieves the top players for a specific game type.
+    """
+    conn = get_db_connection()
+    c = conn.cursor()
+    
+    # Determine sorting order
+    lower_is_better = False
+    if game_type in STATS_DATA:
+        lower_is_better = STATS_DATA[game_type].get('lower_is_better', False)
+        
+    order = "ASC" if lower_is_better else "DESC"
+    
+    try:
+        c.execute(f'''
+            SELECT user_id, best_score, tier, total_plays 
+            FROM user_stats 
+            WHERE game_type = ? 
+            ORDER BY best_score {order} 
+            LIMIT ?
+        ''', (game_type, limit))
+        
+        rows = c.fetchall()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        print(f"Leaderboard Error: {e}")
+        return []
+    finally:
+        conn.close()
+
 
 def save_game_result(user_id, game_type, score, lower_is_better=False):
     """
