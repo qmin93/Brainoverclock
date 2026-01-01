@@ -115,7 +115,7 @@ export default function NumberGame({ difficulty = "hard" }: NumberGameProps) {
                     {gameTitle}
                 </h1>
                 <p className="text-white/60">
-                    Pay attention! Mode switches randomly between Normal and Reverse.
+                    Pay attention! Mode switches randomly between Forward and Reverse.
                 </p>
                 <p className="mt-4 text-sm font-bold uppercase tracking-widest opacity-40">
                     Best: {highScore} Digits
@@ -132,7 +132,7 @@ export default function NumberGame({ difficulty = "hard" }: NumberGameProps) {
                         </div>
                         <button
                             onClick={startGame}
-                            className="flex items-center gap-2 bg-yellow-500 text-black px-8 py-3 rounded-full font-bold hover:bg-yellow-400 transition-transform hover:scale-105"
+                            className="flex items-center gap-2 bg-yellow-500 text-black px-8 py-3 rounded-full font-bold hover:bg-yellow-400 transition-transform hover:scale-105 mx-auto"
                         >
                             <Play className="w-5 h-5" /> Start
                         </button>
@@ -165,7 +165,7 @@ export default function NumberGame({ difficulty = "hard" }: NumberGameProps) {
                                 </h2>
                             ) : (
                                 <h2 className="text-3xl font-black text-emerald-500 animate-bounce text-center drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                                    ⏩ NORMAL ⏩
+                                    ⏩ FORWARD ⏩
                                 </h2>
                             )}
                         </div>
@@ -177,10 +177,10 @@ export default function NumberGame({ difficulty = "hard" }: NumberGameProps) {
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
                             className={`bg-transparent text-center text-5xl md:text-6xl font-black tracking-widest border-b-2 outline-none w-full max-w-lg py-4 placeholder:opacity-10 transition-colors duration-300 ${isReverseRound
-                                    ? "border-red-500/50 focus:border-red-500 text-red-100"
-                                    : "border-emerald-500/50 focus:border-emerald-500 text-emerald-100"
+                                ? "border-red-500/50 focus:border-red-500 text-red-100"
+                                : "border-emerald-500/50 focus:border-emerald-500 text-emerald-100"
                                 }`}
-                            placeholder={level > 1 ? (isReverseRound ? "Type Backwards" : "Type Normal") : "#"}
+                            placeholder={level > 1 ? (isReverseRound ? "Type Backwards" : "Type Forward") : "#"}
                             autoFocus
                         />
                         <button
