@@ -156,8 +156,8 @@ export default function SequenceGame() {
                     <Tile
                         key={i}
                         isActive={activeTile === i}
-                        isDummy={dummies.includes(i)}
-                        isDummyActive={dummies.includes(i) && dummyFlash}
+                        isDummy={false} // Don't show dim red normally
+                        isDummyActive={dummies.includes(i) && dummyFlash} // Only show bright red when flashing
                         onClick={() => handleTileClick(i)}
                         disabled={gameState !== "INPUT"}
                     />
