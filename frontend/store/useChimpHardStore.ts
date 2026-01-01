@@ -1,211 +1,206 @@
 import { create } from 'zustand';
 
-interface Block {
+export interface Block {
     id: number;
-    value: number;       // Number to display (1~N for targets, N+1~ for dummies)
-    x: number;
-    y: number;
-    state: 'visible' | 'hidden' | 'solved';
-    isDummy: boolean;
+    value: number; // 1, 2, 3...
+    isDummy: boolean; // if true, do not click
+    x: number; // Grid col
+    y: number; // Grid row
+    isVisible: boolean; // For clicked handling
 }
+
+type Phase = 'IDLE' | 'INSTRUCTION' | 'MEMORIZE' | 'ACTION' | 'GAME_OVER';
 
 interface ChimpHardState {
+    // Stats
     level: number;
-    status: 'idle' | 'memorize' | 'recall' | 'result';
-    blocks: Block[];
-    nextExpectedNumber: number;
-    exposureTime: number; // ms
+    score: number;
+    lives: number;
 
+    // Game State
+    phase: Phase;
+    blocks: Block[];
+    gridSize: number; // e.g. 6 (6x6)
+
+    // Chaos Factors per round
+    rotation: 0 | 90 | 180 | 270;
+    isReverse: boolean;
+
+    // Logic State
+    nextExpected: number;
+    remainingTargets: number;
+
+    // Actions
     startGame: () => void;
-    startRecall: () => void;
+    startRound: () => void; // Call after instruction
+    startAction: () => void; // Call after memorize
     clickBlock: (id: number) => void;
     resetGame: () => void;
-    nextLevel: () => void;
 }
 
-const generateBlocks = (level: number): { blocks: Block[], exposureTime: number } => {
-    // PRD Logic
-    // Lv1: Target 4 (1~4), Dummy 1 (5) -> Total 5
-    const targetCount = level + 3;
-    const dummyCount = Math.floor(level / 2) + 1;
-    const totalCount = targetCount + dummyCount;
-
-    const positions: { x: number; y: number }[] = [];
-    const rows = 5;
-    const cols = 8; // Desktop standard
-
-    for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-            positions.push({ x, y });
-        }
+const getRotatedPosition = (x: number, y: number, size: number, deg: number) => {
+    // 0 -> x, y
+    // 90 -> size-1-y, x
+    // 180 -> size-1-x, size-1-y
+    // 270 -> y, size-1-x
+    switch (deg) {
+        case 90: return { x: size - 1 - y, y: x };
+        case 180: return { x: size - 1 - x, y: size - 1 - y };
+        case 270: return { x: y, y: size - 1 - x };
+        default: return { x, y };
     }
-
-    // Shuffle positions
-    for (let i = positions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [positions[i], positions[j]] = [positions[j], positions[i]];
-    }
-
-    const blocks: Block[] = [];
-
-    // 1. Create Targets (1 ~ targetCount)
-    for (let i = 0; i < targetCount; i++) {
-        blocks.push({
-            id: i, // Unique visual key ID
-            value: i + 1,
-            x: positions[i].x,
-            y: positions[i].y,
-            state: 'visible',
-            isDummy: false
-        });
-    }
-
-    // 2. Create Dummies (targetCount+1 ~ ) -> Seamlessly continuing numbers
-    // e.g. Target 1,2,3,4. Dummy 5.
-    for (let i = 0; i < dummyCount; i++) {
-        blocks.push({
-            id: targetCount + i,
-            value: targetCount + 1 + i,
-            x: positions[targetCount + i].x,
-            y: positions[targetCount + i].y,
-            state: 'visible',
-            isDummy: true
-        });
-    }
-
-    // PRD Time Calculation: (Count * 0.8s) + 1.0s
-    // 5 items: 4000 + 1000 = 5000ms ?? 
-    // Wait, PRD says "Lv 1 (5 items) -> 3.0s".
-    // Formula: (TotalCount * 800) + 1000 ? 5 * 800 = 4000 + 1000 = 5000. 
-    // PRD table says Lv 1 = 3.0s. 
-    // Let's adjust formula to match PRD table.
-    // Lv 1 (5 items): 3000ms.
-    // Lv 3 (7 items): 4000ms.
-    // Lv 5 (9 items): 5000ms.
-    // It seems to be roughly: 5 items -> 3s, 7 items -> 4s, 9 items -> 5s.
-    // 2 items increase -> 1s increase. (0.5s per item).
-    // Base for 5 items = 3.0s. 
-    // Formula: 3000 + (totalCount - 5) * 500.
-
-    const exposureTime = 3000 + (totalCount - 5) * 500;
-
-    return { blocks, exposureTime };
 };
 
 export const useChimpHardStore = create<ChimpHardState>((set, get) => ({
-    level: 1, // Starts at Level 1 per PRD
-    status: 'idle',
+    level: 1,
+    score: 0,
+    lives: 3,
+    phase: 'IDLE',
     blocks: [],
-    nextExpectedNumber: 1,
-    exposureTime: 0,
+    gridSize: 8, // 8x8 Grid
+    rotation: 0,
+    isReverse: false,
+    nextExpected: 1,
+    remainingTargets: 0,
 
     startGame: () => {
-        const startLevel = 1;
-        const { blocks, exposureTime } = generateBlocks(startLevel);
         set({
-            level: startLevel,
-            status: 'memorize',
-            blocks: blocks,
-            nextExpectedNumber: 1,
-            exposureTime: exposureTime
+            level: 1,
+            score: 0,
+            lives: 3,
+            phase: 'IDLE',
+            blocks: [],
+            gridSize: 8
         });
+        get().startRound(); // Initial round
     },
 
     resetGame: () => {
-        get().startGame();
+        set({ phase: 'IDLE', blocks: [], score: 0, lives: 3, level: 1 });
     },
 
-    startRecall: () => {
-        const { status, blocks } = get();
-        if (status !== 'memorize') return;
+    startRound: () => {
+        const { level } = get();
 
-        const newBlocks = blocks.map(b => ({ ...b, state: 'hidden' as const }));
+        // Difficulty Curve
+        const targetCount = Math.min(20, 4 + Math.floor((level - 1) / 2)); // 4, 4, 5, 5, 6...
+        const dummyCount = level >= 3 ? Math.floor(level / 2) : 0; // Starts from Lv 3
+
+        // Chaos Probability
+        let rotation: 0 | 90 | 180 | 270 = 0;
+        let isReverse = false;
+
+        // Rotation starts Lv 5
+        if (level >= 5) {
+            const r = Math.random();
+            if (r < 0.3) rotation = 90;
+            else if (r < 0.6) rotation = 180;
+            else if (r < 0.8) rotation = 270;
+        }
+
+        // Reverse starts Lv 8
+        if (level >= 8 && Math.random() < 0.4) {
+            isReverse = true;
+        }
+
+        // Generate Blocks
+        const size = 8;
+        const total = targetCount + dummyCount;
+        const positions = new Set<string>();
+        const blocks: Block[] = [];
+
+        // Generate Targets
+        for (let i = 1; i <= targetCount; i++) {
+            let x, y, key;
+            do {
+                x = Math.floor(Math.random() * size);
+                y = Math.floor(Math.random() * size);
+                key = `${x},${y}`;
+            } while (positions.has(key));
+            positions.add(key);
+            blocks.push({ id: Math.random(), value: i, isDummy: false, x, y, isVisible: true });
+        }
+
+        // Generate Dummies
+        for (let i = 0; i < dummyCount; i++) {
+            let x, y, key;
+            do {
+                x = Math.floor(Math.random() * size);
+                y = Math.floor(Math.random() * size);
+                key = `${x},${y}`;
+            } while (positions.has(key));
+            positions.add(key);
+            // Dummies have random high values or generic symbol
+            blocks.push({ id: Math.random(), value: 99 + i, isDummy: true, x, y, isVisible: true });
+        }
+
         set({
-            status: 'recall',
-            blocks: newBlocks
+            phase: 'INSTRUCTION',
+            blocks,
+            rotation,
+            isReverse,
+            nextExpected: isReverse ? targetCount : 1,
+            remainingTargets: targetCount
         });
     },
 
-    nextLevel: () => {
-        const nextLvl = get().level + 1;
-        const { blocks, exposureTime } = generateBlocks(nextLvl);
+    startAction: () => {
+        // Transform Phase: Apply Rotation
+        const { blocks, rotation, gridSize } = get();
+
+        // Update positions based on rotation
+        const newBlocks = blocks.map(b => {
+            const { x, y } = getRotatedPosition(b.x, b.y, gridSize, rotation);
+            return { ...b, x, y };
+        });
+
         set({
-            level: nextLvl,
-            status: 'memorize',
-            blocks: blocks,
-            nextExpectedNumber: 1,
-            exposureTime: exposureTime
+            blocks: newBlocks,
+            phase: 'ACTION'
         });
     },
 
     clickBlock: (id: number) => {
-        const { nextExpectedNumber, blocks, status, level } = get();
+        const { blocks, nextExpected, isReverse, remainingTargets, lives, level, score } = get();
+        const block = blocks.find(b => b.id === id);
+        if (!block || !block.isVisible) return;
 
-        if (status === 'result') return;
-
-        const clickedBlock = blocks.find(b => b.id === id);
-        if (!clickedBlock) return;
-
-        // Memorize phase interaction
-        if (status === 'memorize') {
-            // If User clicks '1' (Target), start recall immediately.
-            if (clickedBlock.value === 1 && !clickedBlock.isDummy) {
-                const newBlocks = blocks.map(b => {
-                    if (b.id === id) return { ...b, state: 'solved' as const };
-                    return { ...b, state: 'hidden' as const };
-                });
-                set({
-                    status: 'recall',
-                    blocks: newBlocks,
-                    nextExpectedNumber: 2
-                });
-                return;
-            }
-            // Click dummy -> Fail
-            if (clickedBlock.isDummy) {
-                set({ status: 'result' });
-                return;
-            }
+        // Dummy Check
+        if (block.isDummy) {
+            // Instant Death or Life Penalty? PRD says "누르면 즉시 사망" but also mentions Lives.
+            // Let's use Life Penalty -2 (Critical) or Game Over.
+            // PRD: "즉시 사망" -> Game Over.
+            set({ phase: 'GAME_OVER', lives: 0 });
             return;
         }
 
-        // Recall phase
-        if (status === 'recall') {
-            // 1. Clicked Dummy? -> Fail
-            if (clickedBlock.isDummy) {
-                set({ status: 'result' });
-                return;
-            }
+        // Sequence Check
+        if (block.value === nextExpected) {
+            // Correct
+            const newBlocks = blocks.map(b => b.id === id ? { ...b, isVisible: false } : b);
 
-            // 2. Clicked wrong order? -> Fail
-            if (clickedBlock.value !== nextExpectedNumber) {
-                set({ status: 'result' });
-                return;
-            }
+            let newRemaining = remainingTargets - 1;
+            let newNext = isReverse ? nextExpected - 1 : nextExpected + 1;
 
-            // 3. Correct
-            const newBlocks = blocks.map(b =>
-                b.id === id ? { ...b, state: 'solved' as const } : b
-            );
+            set({ blocks: newBlocks, remainingTargets: newRemaining, nextExpected: newNext });
 
-            // Check completion (Targets only)
-            const targetCount = level + 3;
-
-            if (nextExpectedNumber === targetCount) {
-                // Determine if this was the last target
-                set({
-                    blocks: newBlocks,
-                    nextExpectedNumber: nextExpectedNumber + 1
-                });
+            if (newRemaining === 0) {
+                // Level Complete
+                set({ score: score + 100 + (level * 10), level: level + 1 });
+                // Delay then next round?
+                // For simplicity, wait logic handle in component, store just updates.
+                // We will rely on component to call startRound after delay.
+                // But safer to set 'IDLE' or keep 'ACTION' and use a timeout in component.
+                // Let's set a temp "WIN" status or just directly init next round?
+                // Direct init might be abrupt. Let's keep phase ACTION but 0 remaining.
                 setTimeout(() => {
-                    get().nextLevel();
-                }, 300);
-            } else {
-                set({
-                    blocks: newBlocks,
-                    nextExpectedNumber: nextExpectedNumber + 1
-                });
+                    get().startRound();
+                }, 1000);
             }
+        } else {
+            // Wrong Order
+            // Game Over
+            set({ phase: 'GAME_OVER', lives: 0 });
         }
-    },
+    }
 }));
