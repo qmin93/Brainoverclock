@@ -35,6 +35,23 @@ const GAME_ID_MAP: Record<string, string> = {
     "Schulte Grid": "schulte_normal"
 };
 
+const GAME_URL_MAP: Record<string, string> = {
+    "Spatial Chaos": "/test/chimp-test-hard",
+    "Chimp Test": "/test/chimp-test",
+    "Aim Trainer Hard": "/test/aim-trainer-hard",
+    "Aim Trainer": "/test/aim-trainer",
+    "Project: Chaos Hunter": "/test/aim-trainer-hard",
+    "Verbal Trap": "/test/verbal-memory-hard",
+    "Verbal Memory": "/test/number-memory", // Assuming default or check others
+    "Stroop Hard": "/test/stroop-test-hard",
+    "Visual Memory Hard": "/test/visual-memory-hard",
+    "Type Flow": "/test/type-flow",
+    "Number Memory": "/test/number-memory",
+    "Sequence Memory": "/test/sequence-memory",
+    "Schulte Grid": "/test/schulte-table",
+    "Math Fall": "/test/math-fall"
+};
+
 const getTier = (gameType: string, score: number): { name: string; icon: string; color: string } => {
     const type = gameType.toLowerCase();
 
@@ -129,7 +146,7 @@ export function ResultModal({
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="bg-slate-900 border border-slate-700 p-8 rounded-[2rem] shadow-2xl w-full max-w-sm md:max-w-4xl text-center relative overflow-hidden"
+                    className="bg-slate-900 border border-slate-700 p-8 rounded-[2rem] shadow-2xl w-full max-w-sm md:max-w-5xl text-center relative overflow-hidden"
                 >
                     {/* Background Shine */}
                     <div className="absolute -top-20 -left-20 w-40 h-40 bg-indigo-500/20 blur-[80px]" />
@@ -194,6 +211,7 @@ export function ResultModal({
                                     gameTitle={gameType}
                                     score={`${score} ${unit}`}
                                     tier={`${tier.icon} ${tier.name}`}
+                                    gameUrl={GAME_URL_MAP[gameType]}
                                 />
                             </div>
 
