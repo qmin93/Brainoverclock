@@ -167,7 +167,7 @@ export function ResultModal({
                         <div className={`${activeTab === 'report' ? 'block' : 'hidden'} md:block flex-1`}>
 
                             {/* Score Card */}
-                            <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 border border-slate-700 relative overflow-hidden text-center">
+                            <div id="score-card-capture" className="bg-slate-800/50 rounded-2xl p-6 mb-6 border border-slate-700 relative overflow-hidden text-center">
                                 <div className="flex flex-col items-center">
                                     <span className="text-slate-400 text-xs uppercase font-bold mb-2">Final Score</span>
                                     <div className="text-6xl font-black text-white leading-none tracking-tighter mb-2">

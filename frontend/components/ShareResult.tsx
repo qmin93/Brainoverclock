@@ -25,33 +25,68 @@ export default function ShareResult({ gameTitle, score, tier, gameUrl }: ShareRe
             `Challenge now! 👇\n${url}`;
     };
 
-    // Unified Handler
+    // Unified Handler with Image Capture
     const handleHybridAction = async () => {
         const text = getShareText();
-        const shareData = {
-            title: `Brain Overclock: ${gameTitle}`,
-            text: text,
-            url: "https://brain-overclock.vercel.app",
-        };
+        let imageBlob: Blob | null = null;
 
-        // 1. Always Copy First
+        // 1. Capture Image
         try {
-            await navigator.clipboard.writeText(text);
-            toast.success("Copy complete! Ready to share. 🔥");
-        } catch (err) {
-            console.error("Copy failed", err);
-            // If copy fails but share is available, we rely on share.
-            if (!navigator.share) {
+            const html2canvas = (await import('html2canvas')).default;
+            const element = document.getElementById("score-card-capture");
+
+            if (element) {
+                const canvas = await html2canvas(element, {
+                    backgroundColor: '#1e293b', // bg-slate-800
+                    scale: 3,
+                    useCORS: true,
+                    logging: false
+                });
+                imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            }
+        } catch (e) {
+            console.error("Image capture failed", e);
+        }
+
+        // 2. Try Copy Image to Clipboard
+        let copied = false;
+        if (imageBlob) {
+            try {
+                // ClipboardItem API requires secure context (HTTPS)
+                const item = new ClipboardItem({ 'image/png': imageBlob });
+                await navigator.clipboard.write([item]);
+                toast.success("Result Card Copied! 📸 Ready to paste.");
+                copied = true;
+            } catch (err) {
+                console.warn("Image copy failed, falling back to text.", err);
+            }
+        }
+
+        // 3. Fallback: Copy Text
+        if (!copied) {
+            try {
+                await navigator.clipboard.writeText(text);
+                toast.success("Result Text Copied! 🔥");
+            } catch (err) {
                 toast.error("Failed to copy.");
             }
         }
 
-        // 2. Try Native Share (if available)
-        if (navigator.share && navigator.canShare(shareData)) {
-            try {
-                await navigator.share(shareData);
-            } catch (err) {
-                // Ignore user abort
+        // 4. Native Share (Mobile) - Share Image File
+        if (navigator.share && imageBlob) {
+            const file = new File([imageBlob], "brain-overclock-result.png", { type: "image/png" });
+            const shareData: ShareData = {
+                files: [file],
+                title: `Brain Overclock: ${gameTitle}`,
+                text: text,
+            };
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    // Ignore abort
+                }
             }
         }
     };
