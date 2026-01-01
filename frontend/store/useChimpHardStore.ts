@@ -5,10 +5,11 @@ interface Block {
     x: number;
     y: number;
     state: 'visible' | 'hidden' | 'solved';
+    isDummy?: boolean;
 }
 
 interface ChimpHardState {
-    level: number;       // Number of blocks (starts at 4)
+    level: number;       // Number of correct blocks (starts at 4)
     status: 'idle' | 'memorize' | 'recall' | 'result';
     blocks: Block[];
     nextExpectedNumber: number;
@@ -22,24 +23,49 @@ interface ChimpHardState {
 }
 
 const generateBlocks = (count: number): Block[] => {
+    // Difficulty curve: Add dummies as level increases
+    let dummyCount = 0;
+    if (count >= 18) dummyCount = 3;
+    else if (count >= 13) dummyCount = 2;
+    else if (count >= 8) dummyCount = 1;
+
+    const totalItems = count + dummyCount;
     const positions: { x: number; y: number }[] = [];
     const rows = 5;
     const cols = 8; // Desktop standard
+
     for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
             positions.push({ x, y });
         }
     }
+    // Shuffle positions
     for (let i = positions.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [positions[i], positions[j]] = [positions[j], positions[i]];
     }
-    return positions.slice(0, count).map((pos, index) => ({
-        id: index + 1,
-        x: pos.x,
-        y: pos.y,
-        state: 'visible',
-    }));
+
+    return positions.slice(0, totalItems).map((pos, index) => {
+        // Items 0 to count-1 are Real (id 1..count)
+        // Items count to totalItems-1 are Dummies (id 1000+)
+        if (index < count) {
+            return {
+                id: index + 1,
+                x: pos.x,
+                y: pos.y,
+                state: 'visible',
+                isDummy: false
+            };
+        } else {
+            return {
+                id: 1000 + (index - count), // Dummy ID
+                x: pos.x,
+                y: pos.y,
+                state: 'visible',
+                isDummy: true
+            };
+        }
+    });
 };
 
 const calculateExposureTime = (count: number) => {

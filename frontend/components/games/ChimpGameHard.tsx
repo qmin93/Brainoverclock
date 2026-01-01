@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useChimpHardStore } from '@/store/useChimpHardStore';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { ResultModal } from './ResultModal';
-import { Zap } from 'lucide-react';
+import { Zap, Bomb } from 'lucide-react';
 
 export default function ChimpGameHard() {
     const {
@@ -158,7 +158,7 @@ export default function ChimpGameHard() {
                                 onClick={() => handleBlockClick(block.id)}
                             >
                                 <span className={isHidden ? "opacity-0" : "opacity-100"}>
-                                    {block.id}
+                                    {block.isDummy ? <Bomb className="w-8 h-8 opacity-80" /> : block.id}
                                 </span>
                             </motion.div>
                         );
