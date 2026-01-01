@@ -19,6 +19,7 @@ interface VerbalHardState {
     startGame: () => void;
     makeGuess: (guess: 'SEEN' | 'NEW') => void;
     resetGame: () => void;
+    advanceRound: (damaged: boolean) => void;
 }
 
 export const useVerbalHardStore = create<VerbalHardState>((set, get) => ({
