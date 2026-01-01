@@ -115,7 +115,7 @@ export default function NumberGame({ difficulty = "hard" }: NumberGameProps) {
                     {gameTitle}
                 </h1>
                 <p className="text-white/60">
-                    Pay attention! Mode switches randomly between Normal and Reverse.
+                    Pay attention! Mode switches randomly between Forward and Reverse.
                 </p>
                 <p className="mt-4 text-sm font-bold uppercase tracking-widest opacity-40">
                     Best: {highScore} Digits
@@ -165,7 +165,7 @@ export default function NumberGame({ difficulty = "hard" }: NumberGameProps) {
                                 </h2>
                             ) : (
                                 <h2 className="text-3xl font-black text-emerald-500 animate-bounce text-center drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                                    ⏩ NORMAL ⏩
+                                    ⏩ FORWARD ⏩
                                 </h2>
                             )}
                         </div>
@@ -180,7 +180,7 @@ export default function NumberGame({ difficulty = "hard" }: NumberGameProps) {
                                 ? "border-red-500/50 focus:border-red-500 text-red-100"
                                 : "border-emerald-500/50 focus:border-emerald-500 text-emerald-100"
                                 }`}
-                            placeholder={level > 1 ? (isReverseRound ? "Type Backwards" : "Type Normal") : "#"}
+                            placeholder={level > 1 ? (isReverseRound ? "Type Backwards" : "Type Forward") : "#"}
                             autoFocus
                         />
                         <button
