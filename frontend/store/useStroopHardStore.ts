@@ -31,11 +31,11 @@ export const useStroopHardStore = create<StroopHardState>((set, get) => ({
     score: 0,
     level: 1,
     status: 'idle',
-    timeLeft: 1.5,
-    maxTime: 1.5,
+    timeLeft: 3.0,
+    maxTime: 3.0,
 
     startGame: () => {
-        set({ score: 0, level: 1, status: 'playing', timeLeft: 1.5, maxTime: 1.5 });
+        set({ score: 0, level: 1, status: 'playing', timeLeft: 3.0, maxTime: 3.0 });
         get().setQuestion();
     },
 
@@ -46,7 +46,8 @@ export const useStroopHardStore = create<StroopHardState>((set, get) => ({
         const ruleIdx = Math.floor(Math.random() * RULES.length);
 
         const newLevel = Math.floor(score / 500) + 1;
-        const newMaxTime = Math.max(0.7, 1.5 - (newLevel - 1) * 0.15);
+        // Start at 3.0s, decrease slower. Min limit 1.2s
+        const newMaxTime = Math.max(1.2, 3.0 - (newLevel - 1) * 0.1);
 
         set({
             currentText: COLORS[textIdx],

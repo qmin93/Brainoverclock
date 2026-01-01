@@ -98,15 +98,15 @@ export default function StroopGameHard() {
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
-                        className={`w-full py-6 rounded-3xl flex flex-col items-center justify-center gap-1 shadow-2xl border-4 ${currentRule === 'match_color'
-                                ? 'bg-blue-600 border-blue-400 text-white'
-                                : 'bg-orange-600 border-orange-400 text-white'
+                        className={`w-full py-4 rounded-3xl flex flex-col items-center justify-center gap-1 shadow-2xl border-4 ${currentRule === 'match_color'
+                            ? 'bg-blue-600 border-blue-400 text-white'
+                            : 'bg-orange-600 border-orange-400 text-white'
                             }`}
                     >
-                        <div className="flex items-center gap-3">
-                            <Shuffle className="w-8 h-8 animate-spin-slow" />
-                            <span className="text-3xl font-black uppercase tracking-tighter">
-                                {currentRule === 'match_color' ? "CLICK THE COLOR" : "READ THE WORD"}
+                        <div className="flex items-center gap-2">
+                            <Shuffle className="w-6 h-6 animate-spin-slow" />
+                            <span className="text-2xl font-black uppercase tracking-tighter">
+                                {currentRule === 'match_color' ? "COLOR" : "WORD"}
                             </span>
                         </div>
                         <div className="flex items-center gap-4">
