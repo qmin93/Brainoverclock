@@ -14,83 +14,83 @@ export default function Home() {
         </h1>
       </div>
 
-      <div className="w-full px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-1 pb-12">
+      <div className="w-full h-full px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-1 pb-4 auto-rows-fr">
         <GameColumn
           title="Reaction Time"
-          description="Choice Reaction. Click GREEN only. Ignore Blue/Orange distractions."
+          description="Choice Reaction. Click GREEN only."
           href="/test/reaction-time-hard"
           icon={Zap}
-          colorClass="bg-orange-400 hover:bg-orange-300 text-slate-900 shadow-xl shadow-orange-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
+          colorClass="bg-orange-400 hover:bg-orange-300 text-slate-900 shadow-xl shadow-orange-200/50 transition-all duration-300 border-none rounded-3xl flex flex-col justify-center items-center p-8 h-full"
           storageKey="reaction_time_hard_score"
           unit="ms"
         />
 
         <GameColumn
           title="Sequence Memory"
-          description="Memorize the pattern. The sequence gets longer every step."
+          description="Memorize the pattern."
           href="/test/sequence-memory"
           icon={Grid3X3}
-          colorClass="bg-cyan-400 hover:bg-cyan-300 text-slate-900 shadow-xl shadow-cyan-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
+          colorClass="bg-cyan-400 hover:bg-cyan-300 text-slate-900 shadow-xl shadow-cyan-200/50 transition-all duration-300 border-none rounded-3xl flex flex-col justify-center items-center p-8 h-full"
           storageKey="sequence_memory_score"
           unit="Level"
         />
 
         <GameColumn
           title="Aim Trainer"
-          description="Hit 30 small targets as fast as you can. Requires precision."
+          description="Hit targets fast."
           href="/test/aim-trainer-hard"
           icon={Crosshair}
-          colorClass="bg-fuchsia-400 hover:bg-fuchsia-300 text-slate-900 shadow-xl shadow-fuchsia-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
+          colorClass="bg-fuchsia-400 hover:bg-fuchsia-300 text-slate-900 shadow-xl shadow-fuchsia-200/50 transition-all duration-300 border-none rounded-3xl flex flex-col justify-center items-center p-8 h-full"
           storageKey="aim_trainer_hard_score"
           unit="ms"
         />
 
         <GameColumn
           title="Number Memory"
-          description="Memorize the number. Randomly type it NORMAL or REVERSE."
+          description="Memorize digits."
           href="/test/number-memory"
           icon={Hash}
-          colorClass="bg-yellow-400 hover:bg-yellow-300 text-slate-900 shadow-xl shadow-yellow-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
+          colorClass="bg-yellow-400 hover:bg-yellow-300 text-slate-900 shadow-xl shadow-yellow-200/50 transition-all duration-300 border-none rounded-3xl flex flex-col justify-center items-center p-8 h-full"
           storageKey="number_memory_hard_score"
           unit="Digits"
         />
 
         <GameColumn
           title="Flash Chimp"
-          description="HARD MODE. Numbers disappear instantly. Pure photographic memory."
+          description="Photographic memory."
           href="/test/chimp-test-hard"
           icon={Brain}
-          colorClass="bg-pink-400 hover:bg-pink-300 text-slate-900 shadow-xl shadow-pink-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
+          colorClass="bg-pink-400 hover:bg-pink-300 text-slate-900 shadow-xl shadow-pink-200/50 transition-all duration-300 border-none rounded-3xl flex flex-col justify-center items-center p-8 h-full"
           storageKey="chimp_hard_score"
           unit="Items"
         />
 
         <GameColumn
           title="Type Flow"
-          description="English Quote Typing. Focus on rhythm, accuracy and beautiful words."
+          description="Rhythm typing."
           href="/test/type-flow"
           icon={Keyboard}
-          colorClass="bg-indigo-400 hover:bg-indigo-300 text-slate-900 shadow-xl shadow-indigo-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
+          colorClass="bg-indigo-400 hover:bg-indigo-300 text-slate-900 shadow-xl shadow-indigo-200/50 transition-all duration-300 border-none rounded-3xl flex flex-col justify-center items-center p-8 h-full"
           storageKey="type_flow_score"
           unit="WPM"
         />
 
         <GameColumn
           title="Verbal Trap"
-          description="Semantic interference test. Beware of synonyms and false memories."
+          description="Semantic test."
           href="/test/verbal-memory-hard"
           icon={Brain}
-          colorClass="bg-indigo-400 hover:bg-indigo-300 text-slate-900 shadow-xl shadow-indigo-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
+          colorClass="bg-indigo-400 hover:bg-indigo-300 text-slate-900 shadow-xl shadow-indigo-200/50 transition-all duration-300 border-none rounded-3xl flex flex-col justify-center items-center p-8 h-full"
           storageKey="verbal_hard_score"
           unit="Words"
         />
 
         <GameColumn
           title="Rotating Matrix"
-          description="Spacial IQ. Mentally rotate the pattern 90° or 180°."
+          description="Mental rotation."
           href="/test/visual-memory-hard"
           icon={Grid3X3}
-          colorClass="bg-red-500 hover:bg-red-400 text-slate-900 shadow-xl shadow-red-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
+          colorClass="bg-red-500 hover:bg-red-400 text-slate-900 shadow-xl shadow-red-200/50 transition-all duration-300 border-none rounded-3xl flex flex-col justify-center items-center p-8 h-full"
           storageKey="visual_hard_score"
           unit="Pts"
         />
