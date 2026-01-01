@@ -124,15 +124,15 @@ export default function NumberGame({ difficulty = "hard" }: NumberGameProps) {
 
             <div className="relative w-full aspect-video flex flex-col items-center justify-center bg-slate-900/50 rounded-3xl border border-white/5 p-8 overflow-hidden shadow-2xl">
                 {gameState === "IDLE" && (
-                    <div className="text-center">
-                        <div className="mb-8 flex flex-col gap-2">
+                    <div className="absolute inset-0 flex items-center justify-center p-8">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none z-0">
                             <h2 className="text-9xl font-black text-white/5 select-none">123</h2>
                             <span className="text-sm font-bold uppercase tracking-widest opacity-30">or</span>
                             <h2 className="text-9xl font-black text-white/5 select-none">321</h2>
                         </div>
                         <button
                             onClick={startGame}
-                            className="flex items-center gap-2 bg-yellow-500 text-black px-8 py-3 rounded-full font-bold hover:bg-yellow-400 transition-transform hover:scale-105"
+                            className="relative z-10 flex items-center gap-2 bg-yellow-500 text-black px-8 py-3 rounded-full font-bold hover:bg-yellow-400 transition-transform hover:scale-105"
                         >
                             <Play className="w-5 h-5" /> Start
                         </button>
@@ -177,8 +177,8 @@ export default function NumberGame({ difficulty = "hard" }: NumberGameProps) {
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
                             className={`bg-transparent text-center text-5xl md:text-6xl font-black tracking-widest border-b-2 outline-none w-full max-w-lg py-4 placeholder:opacity-10 transition-colors duration-300 ${isReverseRound
-                                    ? "border-red-500/50 focus:border-red-500 text-red-100"
-                                    : "border-emerald-500/50 focus:border-emerald-500 text-emerald-100"
+                                ? "border-red-500/50 focus:border-red-500 text-red-100"
+                                : "border-emerald-500/50 focus:border-emerald-500 text-emerald-100"
                                 }`}
                             placeholder={level > 1 ? (isReverseRound ? "Type Backwards" : "Type Normal") : "#"}
                             autoFocus
