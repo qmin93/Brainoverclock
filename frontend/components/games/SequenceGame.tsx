@@ -10,8 +10,9 @@ type GameState = "IDLE" | "SHOWING" | "INPUT" | "GAME_OVER";
 export default function SequenceGame() {
     const [sequence, setSequence] = useState<number[]>([]);
     const [userSequence, setUserSequence] = useState<number[]>([]);
-    const [dummies, setDummies] = useState<number[]>([]);
-    const [dummyFlash, setDummyFlash] = useState(false); // Controls simultaneous red flash
+    // Current distraction tiles shown during flash
+    const [distractionTiles, setDistractionTiles] = useState<number[]>([]);
+
     const [gameState, setGameState] = useState<GameState>("IDLE");
     const [activeTile, setActiveTile] = useState<number | null>(null);
     const [level, setLevel] = useState(1);
@@ -26,46 +27,41 @@ export default function SequenceGame() {
             setGameState("IDLE");
             setSequence([]);
             setUserSequence([]);
-            setDummies([]);
-            setDummyFlash(false);
+            setDistractionTiles([]);
         };
     }, []);
-
-    const addDummies = (currentSeq: number[], currentDummies: number[]) => {
-        const occupied = new Set([...currentSeq, ...currentDummies]);
-        const available = Array.from({ length: 9 }, (_, i) => i).filter(i => !occupied.has(i));
-
-        if (available.length === 0) return currentDummies;
-
-        // Add 1 new dummy per level, or keep filling until some limit?
-        // "단계를 거듭될 수록 추가" -> Just adding 1 more is good progression.
-        // But let's add 1-2 randomly to spice it up.
-
-        const countToAdd = 1;
-        const newDummies = [...currentDummies];
-
-        for (let k = 0; k < countToAdd; k++) {
-            if (available.length === 0) break;
-            const randIdx = Math.floor(Math.random() * available.length);
-            newDummies.push(available[randIdx]);
-            available.splice(randIdx, 1);
-        }
-
-        return newDummies;
-    };
 
     const playSequence = async (seq: number[]) => {
         setGameState("SHOWING");
         await new Promise((r) => setTimeout(r, 500));
 
         for (let i = 0; i < seq.length; i++) {
-            setActiveTile(seq[i]);
-            setDummyFlash(true); // Flash dummies simultaneously
+            const targetTile = seq[i];
+
+            // Generate Random Dummies for THIS flash
+            // "모든 단계에서 랜덤한 숫자로 반짝이게" -> Random count (e.g., 1~4)
+            // Available tiles exclude the target
+            const available = Array.from({ length: 9 }, (_, k) => k).filter(k => k !== targetTile);
+
+            // Randomly shuffle available tiles
+            for (let k = available.length - 1; k > 0; k--) {
+                const j = Math.floor(Math.random() * (k + 1));
+                [available[k], available[j]] = [available[j], available[k]];
+            }
+
+            // Pick random count (1 to 4)
+            const count = Math.floor(Math.random() * 4) + 1;
+            const currentDummies = available.slice(0, count);
+
+            // Activate Target + Distractions
+            setActiveTile(targetTile);
+            setDistractionTiles(currentDummies);
 
             await new Promise((r) => setTimeout(r, 600));
 
+            // Deactivate
             setActiveTile(null);
-            setDummyFlash(false);
+            setDistractionTiles([]);
 
             await new Promise((r) => setTimeout(r, 200));
         }
@@ -77,15 +73,13 @@ export default function SequenceGame() {
         setSequence([]);
         setUserSequence([]);
         setLevel(1);
-        setDummies([]); // Reset dummies on new game
+        setDistractionTiles([]);
 
         const first = Math.floor(Math.random() * 9);
         const initialSeq = [first];
         setSequence(initialSeq);
 
-        // Initial Dummy Generation (Start with 1 dummy)
-        const initialDummies = addDummies(initialSeq, []);
-        setDummies(initialDummies);
+        // No pre-generated dummies needed anymore
 
         setTimeout(() => playSequence(initialSeq), 500);
     };
@@ -99,21 +93,15 @@ export default function SequenceGame() {
         const newSeq = [...sequence, next];
         setSequence(newSeq);
 
-        // Add more dummies to existing ones
-        const updatedDummies = addDummies(newSeq, dummies);
-        setDummies(updatedDummies);
-
         setTimeout(() => playSequence(newSeq), 1000);
     };
 
     const handleTileClick = (index: number) => {
         if (gameState !== "INPUT") return;
 
-        // Check Dummy
-        if (dummies.includes(index)) {
-            gameOver();
-            return;
-        }
+        // Note: Since dummies are purely visual distractions during SHOWING phase and change every flash,
+        // there are no "dummy" tiles during INPUT phase to avoid. 
+        // We only check sequence correctness.
 
         // Visual feedback
         setActiveTile(index);
@@ -156,8 +144,8 @@ export default function SequenceGame() {
                     <Tile
                         key={i}
                         isActive={activeTile === i}
-                        isDummy={false} // Don't show dim red normally
-                        isDummyActive={dummies.includes(i) && dummyFlash} // Only show bright red when flashing
+                        isDummy={false}
+                        isDummyActive={distractionTiles.includes(i)} // Flash random dummies
                         onClick={() => handleTileClick(i)}
                         disabled={gameState !== "INPUT"}
                     />
@@ -184,7 +172,7 @@ export default function SequenceGame() {
                 )}
                 {(gameState === "SHOWING" || gameState === "INPUT") && (
                     <div className="text-white/50 text-sm">
-                        {gameState === "SHOWING" ? "Watch the sequence (ignore red)..." : "Repeat the sequence"}
+                        {gameState === "SHOWING" ? "Watch the white sequence..." : "Repeat the sequence"}
                     </div>
                 )}
             </div>
