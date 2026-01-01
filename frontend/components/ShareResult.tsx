@@ -25,58 +25,42 @@ export default function ShareResult({ gameTitle, score, tier, gameUrl }: ShareRe
             `Challenge now! 👇\n${url}`;
     };
 
-    // 2. 복사 기능 핸들러
-    const handleCopy = async () => {
-        try {
-            await navigator.clipboard.writeText(getShareText());
-            toast.success("Challenge copied to clipboard! 🔥");
-        } catch (err) {
-            toast.error("Failed to copy. Please try again.");
-        }
-    };
-
-    // 3. 네이티브 공유 기능 핸들러
-    const handleShare = async () => {
+    // Unified Handler
+    const handleHybridAction = async () => {
         const shareData = {
             title: `Brain Overclock: ${gameTitle}`,
             text: getShareText(),
-            url: "https://brain-overclock.vercel.app", // 실제 배포 주소로 변경
+            url: "https://brain-overclock.vercel.app",
         };
 
-        // 브라우저가 공유 API를 지원하는지 확인
+        // 1. Try Native Share (Mobile)
         if (navigator.share && navigator.canShare(shareData)) {
             try {
                 await navigator.share(shareData);
+                return; // Shared manually
             } catch (err) {
-                // 사용자가 공유를 취소한 경우는 에러로 처리하지 않음
-                if ((err as Error).name !== "AbortError") {
-                    toast.error("Failed to share.");
-                }
+                // Ignore user abort, proceed to copy if error wasn't abort
+                if ((err as Error).name === "AbortError") return;
             }
-        } else {
-            // 지원하지 않는 경우 (주로 PC) 복사 기능으로 대체
-            handleCopy();
+        }
+
+        // 2. Fallback to Copy (PC or Share failed)
+        try {
+            await navigator.clipboard.writeText(getShareText());
+            toast.success("Copy complete! Ready to share. 🔥");
+        } catch (err) {
+            toast.error("Failed to copy.");
         }
     };
 
     return (
-        <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
-            {/* COPY CHALLENGE 버튼 */}
+        <div className="w-full max-w-xs mx-auto">
             <button
-                onClick={handleCopy}
-                className="flex items-center justify-center gap-2 w-full py-3 font-bold text-slate-900 bg-white rounded-xl hover:bg-slate-200 transition-colors active:scale-95 shadow-lg border border-transparent hover:border-slate-300 uppercase text-sm"
-            >
-                <Copy size={20} />
-                COPY AND SHARE THE RESULT
-            </button>
-
-            {/* Share Result 버튼 */}
-            <button
-                onClick={handleShare}
-                className="flex items-center justify-center gap-2 w-full py-3 font-bold text-white bg-slate-700/50 border-2 border-slate-600 rounded-xl hover:bg-slate-700 hover:border-slate-500 transition-all active:scale-95"
+                onClick={handleHybridAction}
+                className="flex items-center justify-center gap-2 w-full py-3 font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-500/30 uppercase text-sm"
             >
                 <Share2 size={20} />
-                Share Result
+                COPY AND SHARE THE RESULT
             </button>
         </div>
     );
