@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Tile } from "../ui/Tile";
-import { Play, RotateCcw } from "lucide-react";
+import { Play } from "lucide-react";
 import { ResultModal } from "./ResultModal";
 
 type GameState = "IDLE" | "SHOWING" | "INPUT" | "GAME_OVER";
@@ -10,30 +10,52 @@ type GameState = "IDLE" | "SHOWING" | "INPUT" | "GAME_OVER";
 export default function SequenceGame() {
     const [sequence, setSequence] = useState<number[]>([]);
     const [userSequence, setUserSequence] = useState<number[]>([]);
+    const [dummies, setDummies] = useState<number[]>([]); // New: Red Decoy Tiles
     const [gameState, setGameState] = useState<GameState>("IDLE");
     const [activeTile, setActiveTile] = useState<number | null>(null);
     const [level, setLevel] = useState(1);
     const [highScore, setHighScore] = useState(0);
 
+    // Initial Load & Cleanup
     useEffect(() => {
         const saved = localStorage.getItem("sequence_memory_score");
         if (saved) setHighScore(parseInt(saved));
+
+        // Cleanup reset on unmount
+        return () => {
+            setGameState("IDLE");
+            setSequence([]);
+            setUserSequence([]);
+            setDummies([]);
+        };
     }, []);
 
-    const addToSequence = () => {
-        const next = Math.floor(Math.random() * 9);
-        setSequence((prev) => [...prev, next]);
+    const generateDummies = (currentSeq: number[], currentLevel: number) => {
+        const occupied = new Set(currentSeq);
+        const available = Array.from({ length: 9 }, (_, i) => i).filter(i => !occupied.has(i));
+
+        // Dummy count increases with level, capped by available space
+        // e.g. Level 1-2: 1 dummy, Level 3-4: 2 dummies, etc.
+        const targetCount = Math.min(available.length, Math.floor((currentLevel + 1) / 2));
+
+        // Shuffle available
+        for (let i = available.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [available[i], available[j]] = [available[j], available[i]];
+        }
+
+        return available.slice(0, targetCount);
     };
 
     const playSequence = async (seq: number[]) => {
         setGameState("SHOWING");
-        await new Promise((r) => setTimeout(r, 500)); // Initial delay
+        await new Promise((r) => setTimeout(r, 500));
 
         for (let i = 0; i < seq.length; i++) {
             setActiveTile(seq[i]);
-            await new Promise((r) => setTimeout(r, 600)); // Flash duration
+            await new Promise((r) => setTimeout(r, 600));
             setActiveTile(null);
-            await new Promise((r) => setTimeout(r, 200)); // Gap
+            await new Promise((r) => setTimeout(r, 200));
         }
 
         setGameState("INPUT");
@@ -43,31 +65,44 @@ export default function SequenceGame() {
         setSequence([]);
         setUserSequence([]);
         setLevel(1);
+
         const first = Math.floor(Math.random() * 9);
-        setSequence([first]);
-        // Effect will trigger playSequence when sequence changes?
-        // Better to handle explicitly to avoid double triggers.
-        // However, since state update is async, we can useEffect on sequence change
-        // BUT only if game is running.
-        // Let's call playSequence manually after a delay or use effect.
-        // Using simple approach: just setSequence, and let an Effect handle 'if (sequence matches level and state is showing?)'
-        // Actually, explicit is better.
-        setTimeout(() => playSequence([first]), 500);
+        const initialSeq = [first];
+        setSequence(initialSeq);
+
+        // Generate dummies for Level 1
+        const initialDummies = generateDummies(initialSeq, 1);
+        setDummies(initialDummies);
+
+        setTimeout(() => playSequence(initialSeq), 500);
     };
 
     const handleNextLevel = () => {
-        setLevel((l) => l + 1);
+        const nextLevel = level + 1;
+        setLevel(nextLevel);
         setUserSequence([]);
+
         const next = Math.floor(Math.random() * 9);
         const newSeq = [...sequence, next];
         setSequence(newSeq);
+
+        // Regenerate dummies for new level
+        const newDummies = generateDummies(newSeq, nextLevel);
+        setDummies(newDummies);
+
         setTimeout(() => playSequence(newSeq), 1000);
     };
 
     const handleTileClick = (index: number) => {
         if (gameState !== "INPUT") return;
 
-        // Visual feedback for click
+        // Check if Dummy clicked
+        if (dummies.includes(index)) {
+            gameOver();
+            return;
+        }
+
+        // Visual feedback
         setActiveTile(index);
         setTimeout(() => setActiveTile(null), 200);
 
@@ -77,22 +112,24 @@ export default function SequenceGame() {
         // Validate
         const checkIndex = newUserSeq.length - 1;
         if (newUserSeq[checkIndex] !== sequence[checkIndex]) {
-            // Game Over
-            setGameState("GAME_OVER");
-            if ((level - 1) > highScore) {
-                setHighScore(level - 1);
-                localStorage.setItem("sequence_memory_score", (level - 1).toString());
-            }
-            // Send stats (Non-blocking)
-            fetch('/api/cognitive/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ game_type: 'sequence_memory', score: level - 1 })
-            }).catch(console.error);
+            gameOver();
         } else if (newUserSeq.length === sequence.length) {
-            // Level Complete
             handleNextLevel();
         }
+    };
+
+    const gameOver = () => {
+        setGameState("GAME_OVER");
+        if ((level - 1) > highScore) {
+            setHighScore(level - 1);
+            localStorage.setItem("sequence_memory_score", (level - 1).toString());
+        }
+        // Send stats
+        fetch('/api/cognitive/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ game_type: 'sequence_memory', score: level - 1 })
+        }).catch(console.error);
     };
 
     return (
@@ -107,6 +144,16 @@ export default function SequenceGame() {
                     <Tile
                         key={i}
                         isActive={activeTile === i}
+                        isDummy={dummies.includes(i) && gameState !== "SHOWING" && activeTile !== i}
+                        // Show Dummies ONLY when NOT showing sequence? Or ALWAYS?
+                        // "빨간색 더미들도 항상 출연시켜주고" -> Always appear.
+                        // But if activeTile matches dummy (should not happen by logic), active takes precedence.
+                        // Wait, if a tile is both in sequence and dummy? Logic prevents this.
+                        // So simple: isDummy={dummies.includes(i)}
+                        // BUT visual priority: if it flashes white (active), it should be white.
+                        // Tile component handles: isActive ? white : isDummy ? red. 
+                        // So we just pass isDummy.
+                        // However, during "SHOWING", if a dummy is red, it might be distracting (which is the point).
                         onClick={() => handleTileClick(i)}
                         disabled={gameState !== "INPUT"}
                     />
