@@ -295,28 +295,14 @@ export default function TypeFlowGame() {
                                     "Master the immersion of deep paragraphs."}
                         </p>
 
-                        <div className="grid grid-cols-3 gap-4 mb-12 w-full max-w-2xl">
-                            <button
-                                onClick={() => setMode('normal')}
-                                className={`flex flex-col items-center p-6 rounded-3xl border-2 transition-all gap-4 group ${mode === 'normal' ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-slate-50 border-transparent hover:border-slate-200'}`}
-                            >
-                                <Zap className={mode === 'normal' ? 'text-white' : 'text-indigo-600'} />
-                                <span className="font-bold text-sm uppercase tracking-widest">Normal</span>
-                            </button>
-                            <button
-                                onClick={() => setMode('sudden-death')}
-                                className={`flex flex-col items-center p-6 rounded-3xl border-2 transition-all gap-4 group ${mode === 'sudden-death' ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 border-transparent hover:border-slate-200'}`}
-                            >
-                                <Zap className={mode === 'sudden-death' ? 'text-rose-500' : 'text-slate-400'} />
-                                <span className="font-bold text-sm uppercase tracking-widest whitespace-nowrap">Perfect Run</span>
-                            </button>
-                            <button
-                                onClick={() => setMode('blind')}
-                                className={`flex flex-col items-center p-6 rounded-3xl border-2 transition-all gap-4 group ${mode === 'blind' ? 'bg-indigo-900 border-indigo-900 text-white' : 'bg-slate-50 border-transparent hover:border-slate-200'}`}
-                            >
-                                <EyeOff className={mode === 'blind' ? 'text-indigo-400' : 'text-slate-400'} />
-                                <span className="font-bold text-sm uppercase tracking-widest">Blind</span>
-                            </button>
+                        <div className="mb-12 w-full max-w-xl">
+                            <div className="flex flex-col items-center p-8 rounded-3xl border-2 border-indigo-900 bg-indigo-900 text-white gap-4 shadow-xl">
+                                <EyeOff className="text-indigo-400 w-12 h-12 animate-pulse" />
+                                <div className="text-center">
+                                    <h3 className="font-black text-xl uppercase tracking-widest mb-2">Blind Mode Active</h3>
+                                    <p className="text-indigo-200 font-medium">The text will vanish shortly after the game starts.<br />Trust your muscle memory.</p>
+                                </div>
+                            </div>
                         </div>
 
                         <button
