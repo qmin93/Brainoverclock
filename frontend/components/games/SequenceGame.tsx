@@ -144,7 +144,7 @@ export default function SequenceGame() {
                     <Tile
                         key={i}
                         isActive={activeTile === i}
-                        isDummy={dummies.includes(i) && gameState !== "SHOWING" && activeTile !== i}
+                        isDummy={dummies.includes(i) && activeTile !== i}
                         // Show Dummies ONLY when NOT showing sequence? Or ALWAYS?
                         // "빨간색 더미들도 항상 출연시켜주고" -> Always appear.
                         // But if activeTile matches dummy (should not happen by logic), active takes precedence.
