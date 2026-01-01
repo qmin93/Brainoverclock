@@ -2,34 +2,34 @@ import { create } from 'zustand';
 
 interface Block {
     id: number;
+    value: number;       // Number to display (1~N for targets, N+1~ for dummies)
     x: number;
     y: number;
     state: 'visible' | 'hidden' | 'solved';
-    isDummy?: boolean;
+    isDummy: boolean;
 }
 
 interface ChimpHardState {
-    level: number;       // Number of correct blocks (starts at 4)
+    level: number;
     status: 'idle' | 'memorize' | 'recall' | 'result';
     blocks: Block[];
     nextExpectedNumber: number;
     exposureTime: number; // ms
 
     startGame: () => void;
-    startRecall: () => void; // Called manually or by timeout
+    startRecall: () => void;
     clickBlock: (id: number) => void;
     resetGame: () => void;
     nextLevel: () => void;
 }
 
-const generateBlocks = (count: number): Block[] => {
-    // Difficulty curve: Add dummies as level increases
-    let dummyCount = 0;
-    if (count >= 18) dummyCount = 3;
-    else if (count >= 13) dummyCount = 2;
-    else if (count >= 8) dummyCount = 1;
+const generateBlocks = (level: number): { blocks: Block[], exposureTime: number } => {
+    // PRD Logic
+    // Lv1: Target 4 (1~4), Dummy 1 (5) -> Total 5
+    const targetCount = level + 3;
+    const dummyCount = Math.floor(level / 2) + 1;
+    const totalCount = targetCount + dummyCount;
 
-    const totalItems = count + dummyCount;
     const positions: { x: number; y: number }[] = [];
     const rows = 5;
     const cols = 8; // Desktop standard
@@ -39,64 +39,75 @@ const generateBlocks = (count: number): Block[] => {
             positions.push({ x, y });
         }
     }
+
     // Shuffle positions
     for (let i = positions.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [positions[i], positions[j]] = [positions[j], positions[i]];
     }
 
-    return positions.slice(0, totalItems).map((pos, index) => {
-        // Items 0 to count-1 are Real (id 1..count)
-        // Items count to totalItems-1 are Dummies (id 1000+)
-        if (index < count) {
-            return {
-                id: index + 1,
-                x: pos.x,
-                y: pos.y,
-                state: 'visible',
-                isDummy: false
-            };
-        } else {
-            return {
-                id: 1000 + (index - count), // Dummy ID
-                x: pos.x,
-                y: pos.y,
-                state: 'visible',
-                isDummy: true
-            };
-        }
-    });
-};
+    const blocks: Block[] = [];
 
-const calculateExposureTime = (count: number) => {
-    // Lv 1 (4): 1000ms
-    // Lv 5 (9): 2000ms
-    // Slope: (2000-1000)/(9-4) = 200ms per item
-    // Lv 10 (14): 1000 + 10*200 = 3000ms.
-    // PRD says 2.5s for 14.
-    // Let's use 150ms per item + base.
-    // Base 400ms + (Count * 150ms).
-    // 4 items: 400 + 600 = 1000ms. Perfect.
-    // 9 items: 400 + 1350 = 1750ms. Close to 2.0s.
-    // 14 items: 400 + 2100 = 2500ms. Perfect match with PRD.
-    return 400 + (count * 150);
+    // 1. Create Targets (1 ~ targetCount)
+    for (let i = 0; i < targetCount; i++) {
+        blocks.push({
+            id: i, // Unique visual key ID
+            value: i + 1,
+            x: positions[i].x,
+            y: positions[i].y,
+            state: 'visible',
+            isDummy: false
+        });
+    }
+
+    // 2. Create Dummies (targetCount+1 ~ ) -> Seamlessly continuing numbers
+    // e.g. Target 1,2,3,4. Dummy 5.
+    for (let i = 0; i < dummyCount; i++) {
+        blocks.push({
+            id: targetCount + i,
+            value: targetCount + 1 + i,
+            x: positions[targetCount + i].x,
+            y: positions[targetCount + i].y,
+            state: 'visible',
+            isDummy: true
+        });
+    }
+
+    // PRD Time Calculation: (Count * 0.8s) + 1.0s
+    // 5 items: 4000 + 1000 = 5000ms ?? 
+    // Wait, PRD says "Lv 1 (5 items) -> 3.0s".
+    // Formula: (TotalCount * 800) + 1000 ? 5 * 800 = 4000 + 1000 = 5000. 
+    // PRD table says Lv 1 = 3.0s. 
+    // Let's adjust formula to match PRD table.
+    // Lv 1 (5 items): 3000ms.
+    // Lv 3 (7 items): 4000ms.
+    // Lv 5 (9 items): 5000ms.
+    // It seems to be roughly: 5 items -> 3s, 7 items -> 4s, 9 items -> 5s.
+    // 2 items increase -> 1s increase. (0.5s per item).
+    // Base for 5 items = 3.0s. 
+    // Formula: 3000 + (totalCount - 5) * 500.
+
+    const exposureTime = 3000 + (totalCount - 5) * 500;
+
+    return { blocks, exposureTime };
 };
 
 export const useChimpHardStore = create<ChimpHardState>((set, get) => ({
-    level: 4,
+    level: 1, // Starts at Level 1 per PRD
     status: 'idle',
     blocks: [],
     nextExpectedNumber: 1,
-    exposureTime: 1000,
+    exposureTime: 0,
 
     startGame: () => {
-        const startCount = 4;
+        const startLevel = 1;
+        const { blocks, exposureTime } = generateBlocks(startLevel);
         set({
-            level: startCount,
+            level: startLevel,
             status: 'memorize',
-            blocks: generateBlocks(startCount),
+            blocks: blocks,
             nextExpectedNumber: 1,
-            exposureTime: calculateExposureTime(startCount)
+            exposureTime: exposureTime
         });
     },
 
@@ -108,7 +119,6 @@ export const useChimpHardStore = create<ChimpHardState>((set, get) => ({
         const { status, blocks } = get();
         if (status !== 'memorize') return;
 
-        // Hide all blocks
         const newBlocks = blocks.map(b => ({ ...b, state: 'hidden' as const }));
         set({
             status: 'recall',
@@ -118,37 +128,30 @@ export const useChimpHardStore = create<ChimpHardState>((set, get) => ({
 
     nextLevel: () => {
         const nextLvl = get().level + 1;
+        const { blocks, exposureTime } = generateBlocks(nextLvl);
         set({
             level: nextLvl,
             status: 'memorize',
-            blocks: generateBlocks(nextLvl),
+            blocks: blocks,
             nextExpectedNumber: 1,
-            exposureTime: calculateExposureTime(nextLvl)
+            exposureTime: exposureTime
         });
     },
 
     clickBlock: (id: number) => {
-        const { nextExpectedNumber, blocks, status } = get();
+        const { nextExpectedNumber, blocks, status, level } = get();
 
         if (status === 'result') return;
 
-        // In Hard Mode, clicking during Memorize might be allowed to skip wait?
-        // PRD: "사용자가 클릭하지 않아도... 시간이 다 되면...".
-        // Usually standard Chimp: if you click '1', it starts.
-        // Hard Mode Flash: The numbers just appear. Trigger timer.
-        // If user clicks correct number, we can facilitate.
+        const clickedBlock = blocks.find(b => b.id === id);
+        if (!clickedBlock) return;
 
+        // Memorize phase interaction
         if (status === 'memorize') {
-            // If user clicks 1, we enter recall immediately?
-            // "사용자가 클릭하지 않아도...". 
-            // Let's assume user CAN preemptively start by clicking 1.
-            if (id === 1) {
-                // Force recall mode immediately, handle logic
-                // Actually, Phase 2 starts logic.
-                // If I click 1:
-                // 1 becomes solved. Others hidden. Status Recall.
-                const newBlocks = blocks.map((b) => {
-                    if (b.id === 1) return { ...b, state: 'solved' as const };
+            // If User clicks '1' (Target), start recall immediately.
+            if (clickedBlock.value === 1 && !clickedBlock.isDummy) {
+                const newBlocks = blocks.map(b => {
+                    if (b.id === id) return { ...b, state: 'solved' as const };
                     return { ...b, state: 'hidden' as const };
                 });
                 set({
@@ -157,24 +160,39 @@ export const useChimpHardStore = create<ChimpHardState>((set, get) => ({
                     nextExpectedNumber: 2
                 });
                 return;
-            } else {
-                // Clicking wrong number during memorize?
-                // Maybe ignore or Fail?
-                // Let's ignore to be kind, or Fail if strictly "Flash".
-                // PRD doesn't specify. I'll ignore.
+            }
+            // Click dummy -> Fail
+            if (clickedBlock.isDummy) {
+                set({ status: 'result' });
                 return;
             }
+            return;
         }
 
-        if (id === nextExpectedNumber) {
-            // Correct
-            const newBlocks = blocks.map((b) =>
+        // Recall phase
+        if (status === 'recall') {
+            // 1. Clicked Dummy? -> Fail
+            if (clickedBlock.isDummy) {
+                set({ status: 'result' });
+                return;
+            }
+
+            // 2. Clicked wrong order? -> Fail
+            if (clickedBlock.value !== nextExpectedNumber) {
+                set({ status: 'result' });
+                return;
+            }
+
+            // 3. Correct
+            const newBlocks = blocks.map(b =>
                 b.id === id ? { ...b, state: 'solved' as const } : b
             );
 
-            const isLevelComplete = newBlocks.every((b) => b.state === 'solved');
+            // Check completion (Targets only)
+            const targetCount = level + 3;
 
-            if (isLevelComplete) {
+            if (nextExpectedNumber === targetCount) {
+                // Determine if this was the last target
                 set({
                     blocks: newBlocks,
                     nextExpectedNumber: nextExpectedNumber + 1
@@ -185,12 +203,9 @@ export const useChimpHardStore = create<ChimpHardState>((set, get) => ({
             } else {
                 set({
                     blocks: newBlocks,
-                    nextExpectedNumber: nextExpectedNumber + 1,
+                    nextExpectedNumber: nextExpectedNumber + 1
                 });
             }
-        } else {
-            // Incorrect -> Sudden Death (1 Strike)
-            set({ status: 'result' });
         }
     },
 }));
