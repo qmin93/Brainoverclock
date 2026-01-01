@@ -25,6 +25,7 @@ export default function VisualGameHard() {
 
     useEffect(() => {
         resetGame();
+        return () => resetGame();
     }, [resetGame]);
 
     useEffect(() => {

@@ -22,6 +22,11 @@ export default function TypeFlowGame() {
         reset
     } = useTypeFlowStore();
 
+    useEffect(() => {
+        reset();
+        return () => reset();
+    }, [reset]);
+
     const [percentile, setPercentile] = useState<number | undefined>(undefined);
     const [showBlindText, setShowBlindText] = useState(true);
     const [glitch, setGlitch] = useState(false);

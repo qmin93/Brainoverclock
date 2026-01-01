@@ -29,6 +29,11 @@ export default function StroopGameHard() {
         resetGame
     } = useStroopHardStore();
 
+    useEffect(() => {
+        resetGame();
+        return () => resetGame();
+    }, [resetGame]);
+
     const [percentile, setPercentile] = useState<number | undefined>(undefined);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
