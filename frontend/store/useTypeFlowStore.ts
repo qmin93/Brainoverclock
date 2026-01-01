@@ -168,17 +168,6 @@ export const useTypeFlowStore = create<TypeFlowState>((set, get) => ({
             currentQuote: nextQuote,
             userInput: '',
             mistakes: 0,
-            startTime: Date.now(), // Restart timer immediately (or wait for first input? logic inside handleInput handles !startTime check if we set it null. Let's set it Date.now() but the user has memorize time. So actually set startTime to Date.now() is wrong if we want strict WPM. But usually WPM starts on first keystroke? TypeFlow logic starts on 'start()'. Let's reset startTime to Date.now() effectively resetting the clock.)
-            // Actually, handleInput checks `!startTime`. If we set it here, time flies while memorizing.
-            // Adjust: Set startTime to null? No, then handleInput wont work?
-            // handleInput: `if (status !== 'running' || !startTime) return;`
-            // We need to keep running.
-            // Issue: When Next Level starts, Blind Mode gives 7s memorize time. Typing is allowed?
-            // If typing is allowed during memorize, WPM counts.
-            // If we want WPM to start AFTER memorize or FIRST keystroke, we should set startTime on first input.
-            // But existing logic sets startTime in start().
-            // Let's set startTime to Date.now() for simplicity, assuming user starts typing or memorizing.
-            // Ideally, we reset startTime to Date.now().
             startTime: Date.now(),
             wpm: finalWPM, // Update display WPM to show last run's speed
         });
