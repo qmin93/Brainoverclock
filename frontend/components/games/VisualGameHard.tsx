@@ -140,8 +140,8 @@ export default function VisualGameHard() {
                             {rotation === 180 && <ArrowUpDown className="w-8 h-8 rotate-45" />} {/* Visual proxy for 180 */}
 
                             <span className="text-2xl font-black">
-                                {rotation === 90 && "90° CW"}
-                                {rotation === -90 && "90° CCW"}
+                                {rotation === 90 && "90° Clock Wise"}
+                                {rotation === -90 && "90° Counter Clock Wise"}
                                 {rotation === 180 && "180°"}
                             </span>
                         </motion.div>
@@ -179,9 +179,7 @@ export default function VisualGameHard() {
                 )}
             </div>
 
-            <div className="mt-8 text-center text-white/30 text-sm">
-                Mental Rotation Task • Spatial IQ
-            </div>
+
         </div>
     );
 }
