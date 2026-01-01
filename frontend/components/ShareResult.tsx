@@ -12,17 +12,21 @@ interface ShareResultProps {
 }
 
 export default function ShareResult({ gameTitle, score, tier, gameUrl }: ShareResultProps) {
-    // 1. 공유할 텍스트 생성 함수 (더 꾸며진 버전)
+    // 1. 공유할 텍스트 생성 함수
     const getShareText = () => {
-        const baseUrl = "https://brain-overclock.vercel.app";
-        const url = gameUrl ? `${baseUrl}${gameUrl}` : baseUrl;
+        // 브라우저(window)가 있으면 현재 주소를 쓰고, 없으면 기본 주소를 씀
+        const baseUrl = typeof window !== 'undefined'
+            ? window.location.origin
+            : "https://brain-overclock.vercel.app";
 
-        return `🧠 **Brain Overclock Challenge!** 🧠\n\n` +
+        const urlToShare = gameUrl ? `${baseUrl}${gameUrl}` : baseUrl;
+
+        return `🧠 **BRAIN OVERCLOCK CHALLENGE** 🧠\n\n` +
             `🎮 Game: ${gameTitle}\n` +
             `🏆 Score: ${score}\n` +
             `🎖️ Tier: ${tier}\n\n` +
             `Can you beat my score? 😎\n` +
-            `Challenge now! 👇\n${url}`;
+            `Challenge now! 👇\n${urlToShare}`;
     };
 
     // Unified Handler with Image Capture
