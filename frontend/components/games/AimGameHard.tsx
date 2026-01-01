@@ -188,8 +188,15 @@ export default function AimGameHard() {
                     if (!savedMax || score > parseInt(savedMax)) {
                         localStorage.setItem('aim_hard_score', score.toString());
                     }
-                    // Submit to API if needed (omitted for brevity standard logic)
-                } catch (e) { }
+
+                    const username = localStorage.getItem('brain_username') || 'Anonymous';
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5328';
+                    await fetch(`${apiUrl}/api/score/aim-hard`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ score, username })
+                    });
+                } catch (e) { console.error("Save failed", e); }
             };
             save();
         }

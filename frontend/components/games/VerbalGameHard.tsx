@@ -64,10 +64,12 @@ export default function VerbalGameHard() {
                 }
 
                 try {
-                    const res = await fetch('/api/score/verbal-hard', {
+                    const username = localStorage.getItem('brain_username') || 'Anonymous';
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5328';
+                    const res = await fetch(`${apiUrl}/api/score/verbal-hard`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ score: score })
+                        body: JSON.stringify({ score: score, username: username })
                     });
                     if (res.ok) {
                         const data = await res.json();

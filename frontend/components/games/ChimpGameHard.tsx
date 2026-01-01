@@ -59,7 +59,22 @@ export default function ChimpGameHard() {
                 if (!savedMax || score > parseInt(savedMax)) {
                     localStorage.setItem('chimp_hard_score', score.toString());
                 }
-                // API call omitted for brevity standard logic
+
+                // API Call
+                try {
+                    const username = localStorage.getItem('brain_username') || 'Anonymous';
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5328';
+                    await fetch(`${apiUrl}/api/score/chimp-hard`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            score: score,
+                            username: username
+                        })
+                    });
+                } catch (err) {
+                    console.error("Failed to save score:", err);
+                }
             };
             saveScore();
         }
