@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Share2, Copy, RotateCcw, Home } from "lucide-react";
+import { RotateCcw, Home, Trophy, Grip } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ShareResult from "../ShareResult";
 
 interface ResultModalProps {
     isOpen: boolean;
@@ -15,6 +16,69 @@ interface ResultModalProps {
     children?: React.ReactNode;
 }
 
+// Backend Game ID Mapping
+const GAME_ID_MAP: Record<string, string> = {
+    "Spatial Chaos": "chimp_test_hard",
+    "Chimp Test": "chimp_test",
+    "Aim Trainer Hard": "aim_hard",
+    "Aim Trainer": "aim_trainer",
+    "Project: Chaos Hunter": "aim_hard",
+    "Verbal Trap": "verbal_hard",
+    "Verbal Memory": "verbal_memory",
+    "Stroop Hard": "stroop_hard",
+    "Stroop Task": "stroop_task",
+    "Visual Memory Hard": "visual_hard",
+    "Visual Memory": "visual_memory",
+    "Type Flow": "type_flow",
+    "Number Memory": "n_back",
+    "Sequence Memory": "sequence_memory",
+    "Schulte Grid": "schulte_normal"
+};
+
+const getTier = (gameType: string, score: number): { name: string; icon: string; color: string } => {
+    const type = gameType.toLowerCase();
+
+    if (type.includes("chimp") || type.includes("spatial")) {
+        if (score >= 15) return { name: "Alien (👽)", icon: "👽", color: "text-purple-400" };
+        if (score >= 10) return { name: "Chimp (🦍)", icon: "🦍", color: "text-rose-400" };
+        if (score >= 5) return { name: "Cat (🐈)", icon: "🐈", color: "text-amber-400" };
+        return { name: "Shrimp (🦐)", icon: "🦐", color: "text-slate-400" };
+    }
+
+    if (type.includes("typo") || type.includes("type")) {
+        if (score >= 90) return { name: "Alien (👽)", icon: "👽", color: "text-purple-400" };
+        if (score >= 60) return { name: "Cheetah (🐆)", icon: "🐆", color: "text-amber-400" };
+        if (score >= 30) return { name: "Rabbit (🐇)", icon: "🐇", color: "text-blue-400" };
+        return { name: "Turtle (🐢)", icon: "🐢", color: "text-emerald-400" };
+    }
+
+    if (type.includes("aim") || type.includes("chaos")) {
+        if (score >= 20000) return { name: "Aimbot (🤖)", icon: "🤖", color: "text-rose-500" };
+        if (score >= 10000) return { name: "Sniper (🎯)", icon: "🎯", color: "text-amber-400" };
+        if (score >= 5000) return { name: "Soldier (🔫)", icon: "🔫", color: "text-blue-400" };
+        return { name: "Stormtrooper (💀)", icon: "💀", color: "text-slate-400" };
+    }
+
+    if (type.includes("verbal") || type.includes("liar")) {
+        if (score >= 100) return { name: "Encyclopedia (📖)", icon: "📖", color: "text-amber-400" };
+        if (score >= 50) return { name: "Scholar (🎓)", icon: "🎓", color: "text-blue-400" };
+        if (score >= 20) return { name: "Student (🎒)", icon: "🎒", color: "text-emerald-400" };
+        return { name: "Goldfish (🐟)", icon: "🐟", color: "text-orange-400" };
+    }
+
+    if (type.includes("stroop")) {
+        if (score >= 20) return { name: "Computer (💻)", icon: "💻", color: "text-blue-400" };
+        if (score >= 15) return { name: "Genius (🧠)", icon: "🧠", color: "text-purple-400" };
+        if (score >= 10) return { name: "Human (👤)", icon: "👤", color: "text-emerald-400" };
+        return { name: "Sleepy (😴)", icon: "😴", color: "text-slate-400" };
+    }
+
+    if (score >= 20) return { name: "Grandmaster", icon: "👑", color: "text-yellow-400" };
+    if (score >= 10) return { name: "Expert", icon: "🥇", color: "text-slate-200" };
+    if (score >= 5) return { name: "Novice", icon: "🥉", color: "text-orange-700" };
+    return { name: "Beginner", icon: "🌱", color: "text-emerald-400" };
+};
+
 export function ResultModal({
     isOpen,
     score,
@@ -25,117 +89,214 @@ export function ResultModal({
     children,
 }: ResultModalProps) {
     const router = useRouter();
-    const [toastMsg, setToastMsg] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'report' | 'leaderboard'>('report');
+    const [leaderboard, setLeaderboard] = useState<any[]>([]);
+    const [isLoadingLb, setIsLoadingLb] = useState(false);
 
-    const showToast = (msg: string) => {
-        setToastMsg(msg);
-        setTimeout(() => setToastMsg(null), 2000);
-    };
+    const tier = getTier(gameType, score);
+    const backendGameId = GAME_ID_MAP[gameType] || gameType.toLowerCase().replace(/ /g, '_');
 
-    const handleShare = async () => {
-        try {
-            await navigator.clipboard.writeText(window.location.href);
-            showToast("Link Details copied!");
-        } catch (err) {
-            // Fallback or ignore
+    useEffect(() => {
+        if (isOpen) {
+            // Always fetch leaderboard on open (for desktop view compatibility)
+            setIsLoadingLb(true);
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5328';
+            fetch(`${apiUrl}/api/leaderboard?game_type=${backendGameId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setLeaderboard(data);
+                })
+                .catch(err => console.error("Failed to load leaderboard", err))
+                .finally(() => setIsLoadingLb(false));
         }
-    };
+    }, [isOpen, backendGameId]);
 
-    const handleCopyResult = async () => {
-        const text = `I achieved ${score} ${unit} on ${gameType}! Can you beat me? #BrainOverclock`;
-        try {
-            await navigator.clipboard.writeText(text);
-            showToast("Result Details copied!");
-        } catch (err) {
-            // Fallback
-        }
-    };
+    // Reset tab on open
+    useEffect(() => {
+        if (isOpen) setActiveTab('report');
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
     return (
         <AnimatePresence>
             <div
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
             >
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="bg-slate-900 border border-white/10 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center relative overflow-hidden"
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    className="bg-slate-900 border border-slate-700 p-8 rounded-[2rem] shadow-2xl w-full max-w-sm md:max-w-4xl text-center relative overflow-hidden"
                 >
-                    {/* Toast Notification */}
-                    <AnimatePresence>
-                        {toastMsg && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute top-4 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-bold px-4 py-2 rounded-full shadow-lg z-20"
+                    {/* Background Shine */}
+                    <div className="absolute -top-20 -left-20 w-40 h-40 bg-indigo-500/20 blur-[80px]" />
+                    <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-rose-500/20 blur-[80px]" />
+
+                    {/* Header */}
+                    <div className="relative mb-6">
+                        <h2 className="text-2xl font-black text-white tracking-tight uppercase">{gameType}</h2>
+
+                        {/* Tabs (Mobile Only) */}
+                        <div className="flex justify-center mt-4 bg-slate-800 p-1 rounded-full w-full md:hidden">
+                            <button
+                                onClick={() => setActiveTab('report')}
+                                className={`flex-1 py-1.5 px-4 rounded-full text-xs font-bold uppercase tracking-wider transition-all
+                                    ${activeTab === 'report' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}
+                                `}
                             >
-                                {toastMsg}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {/* Gradient Glow */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-sky-500 to-indigo-500" />
-
-                    <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Game Over</h2>
-                    <p className="text-white/50 text-sm uppercase tracking-widest mb-8">{gameType}</p>
-
-                    <div className="mb-10">
-                        <div className="text-7xl font-mono font-black text-white mb-2">
-                            {score}
-                            <span className="text-3xl text-white/40 ml-2">{unit}</span>
+                                Report
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('leaderboard')}
+                                className={`flex-1 py-1.5 px-4 rounded-full text-xs font-bold uppercase tracking-wider transition-all
+                                    ${activeTab === 'leaderboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}
+                                `}
+                            >
+                                Leaderboard
+                            </button>
                         </div>
-                        {percentile !== undefined && (
-                            <div className="inline-block bg-white/5 px-4 py-1 rounded-full border border-white/10">
-                                <span className="text-emerald-400 font-bold">Top {percentile}%</span>
-                            </div>
-                        )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <button
-                            onClick={handleShare}
-                            className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white p-4 rounded-xl transition-all duration-200"
-                        >
-                            <Share2 className="w-5 h-5" />
-                            <span className="font-semibold">Share</span>
-                        </button>
+                    {/* TWO COLUMN GRID FOR DESKTOP */}
+                    <div className="flex flex-col md:flex-row gap-8 text-left">
 
-                        <button
-                            onClick={handleCopyResult}
-                            className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white p-4 rounded-xl transition-all duration-200"
-                        >
-                            <Copy className="w-5 h-5" />
-                            <span className="font-semibold">Copy</span>
-                        </button>
+                        {/* LEFT COLUMN: REPORT (Visible on Mobile Report Tab OR Desktop) */}
+                        <div className={`${activeTab === 'report' ? 'block' : 'hidden'} md:block flex-1`}>
 
-                        <button
-                            onClick={onRetry}
-                            className="col-span-1 flex items-center justify-center gap-2 bg-white text-black hover:bg-gray-200 p-4 rounded-xl transition-all duration-200 font-bold"
-                        >
-                            <RotateCcw className="w-5 h-5" />
-                            <span>Retake</span>
-                        </button>
+                            {/* Score Card */}
+                            <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 border border-slate-700 relative overflow-hidden text-center">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-slate-400 text-xs uppercase font-bold mb-2">Final Score</span>
+                                    <div className="text-6xl font-black text-white leading-none tracking-tighter mb-2">
+                                        {score}
+                                        <span className="text-lg text-slate-500 ml-1 font-medium">{unit}</span>
+                                    </div>
+                                    <div className="mt-4 flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-full border border-slate-700 shadow-inner">
+                                        <span className="text-xl">{tier.icon}</span>
+                                        <span className={`font-bold ${tier.color}`}>{tier.name}</span>
+                                    </div>
+                                </div>
+                                {percentile !== undefined && (
+                                    <div className="absolute top-3 right-3">
+                                        <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded border border-emerald-500/20">
+                                            TOP {percentile}%
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
 
-                        <button
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={() => router.push('/')}
-                            className="col-span-1 flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white p-4 rounded-xl transition-all duration-200"
-                        >
-                            <Home className="w-5 h-5" />
-                            <span>Home</span>
-                        </button>
+                            {/* Share & Buttons */}
+                            <div className="mb-4">
+                                <ShareResult
+                                    gameTitle={gameType}
+                                    score={`${score} ${unit}`}
+                                    tier={`${tier.icon} ${tier.name}`}
+                                />
+                            </div>
+
+                            {/* Navigation Buttons (Desktop: Bottom of Left Col, Mobile: Bottom of Modal) */}
+                            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800">
+                                <button
+                                    onClick={onRetry}
+                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:text-white"
+                                >
+                                    <RotateCcw className="w-4 h-4" />
+                                    <span>Retry</span>
+                                </button>
+                                <button
+                                    onClick={() => router.push('/')}
+                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:text-white"
+                                >
+                                    <Home className="w-4 h-4" />
+                                    <span>Home</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* RIGHT COLUMN: LEADERBOARD (Visible on Mobile Leaderboard Tab OR Desktop) */}
+                        <div className={`${activeTab === 'leaderboard' ? 'block' : 'hidden'} md:block flex-1 md:border-l md:border-slate-800 md:pl-8`}>
+                            <h3 className="text-left text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <Trophy size={14} className="text-yellow-500" />
+                                Global Leaderboard
+                            </h3>
+
+                            {isLoadingLb ? (
+                                <div className="flex items-center justify-center h-48">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                                </div>
+                            ) : leaderboard.length === 0 ? (
+                                <div className="text-slate-500 text-sm py-10 text-center">No records. Be the first!</div>
+                            ) : (
+                                <div className="flex flex-col gap-2 max-h-[300px] md:max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                                    {leaderboard.map((entry, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`flex items-center justify-between p-3 rounded-lg border 
+                                                ${idx === 0 ? 'bg-yellow-500/10 border-yellow-500/30' :
+                                                    idx === 1 ? 'bg-slate-700/50 border-slate-600' :
+                                                        idx === 2 ? 'bg-orange-700/20 border-orange-700/30' :
+                                                            'bg-slate-800/30 border-slate-800'}
+                                            `}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shrink-0
+                                                     ${idx === 0 ? 'bg-yellow-500 text-black' :
+                                                        idx === 1 ? 'bg-slate-400 text-black' :
+                                                            idx === 2 ? 'bg-orange-600 text-white' :
+                                                                'bg-slate-700 text-slate-400'}
+                                                `}>
+                                                    {idx + 1}
+                                                </div>
+                                                <div className="flex flex-col items-start min-w-0">
+                                                    <span className={`text-sm font-bold truncate ${idx === 0 ? 'text-yellow-400' : 'text-slate-200'}`}>
+                                                        {entry.user_id.split('_')[0] || 'Unknown'}
+                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] text-slate-500 truncate">#{entry.user_id.slice(-4)}</span>
+                                                        {entry.tier && (
+                                                            <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">{entry.tier}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="font-mono font-bold text-white shrink-0">
+                                                {entry.best_score}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Mobile Only Navigation Buttons (Repeated because they shouldn't be inside Right Col on desktop) */}
+                            {/* Actually, Navigation is in Left Col on Desktop. On Mobile, if we are in Leaders tab, we might need Nav. */}
+                            {/* But standard UI pattern: Nav is usually sticky or at bottom. */}
+                            {/* Let's replicate Nav buttons for Mobile Leaderboard Tab convenience */}
+                            <div className="md:hidden grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800">
+                                <button
+                                    onClick={onRetry}
+                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2"
+                                >
+                                    <RotateCcw className="w-4 h-4" />
+                                    <span>Retry</span>
+                                </button>
+                                <button
+                                    onClick={() => router.push('/')}
+                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2"
+                                >
+                                    <Home className="w-4 h-4" />
+                                    <span>Home</span>
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
 
                     {children && (
-                        <div className="mt-4 pt-4 border-t border-white/5">
-                            {children}
+                        <div className="mt-2 text-xs text-slate-600">
+                            {/* Optional children content */}
                         </div>
                     )}
                 </motion.div>

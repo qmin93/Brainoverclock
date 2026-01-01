@@ -21,17 +21,17 @@ export default function ShareResult({ gameTitle, score, tier, gameUrl }: ShareRe
             `🎮 Game: ${gameTitle}\n` +
             `🏆 Score: ${score}\n` +
             `🎖️ Tier: ${tier}\n\n` +
-            `제 기록을 넘을 수 있겠어요? 😎\n` +
-            `지금 도전해보세요! 👇\n${url}`;
+            `Can you beat my score? 😎\n` +
+            `Challenge now! 👇\n${url}`;
     };
 
     // 2. 복사 기능 핸들러
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(getShareText());
-            toast.success("도전장이 클립보드에 복사되었습니다! 🔥");
+            toast.success("Challenge copied to clipboard! 🔥");
         } catch (err) {
-            toast.error("복사에 실패했습니다. 다시 시도해주세요.");
+            toast.error("Failed to copy. Please try again.");
         }
     };
 
@@ -50,7 +50,7 @@ export default function ShareResult({ gameTitle, score, tier, gameUrl }: ShareRe
             } catch (err) {
                 // 사용자가 공유를 취소한 경우는 에러로 처리하지 않음
                 if ((err as Error).name !== "AbortError") {
-                    toast.error("공유하기에 실패했습니다.");
+                    toast.error("Failed to share.");
                 }
             }
         } else {

@@ -14,12 +14,12 @@ export default function Home() {
         </h1>
       </div>
 
-      <div className="w-full max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 flex-1 pb-12">
+      <div className="w-full px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-1 pb-12">
         <GameColumn
           title="Reaction Time"
           description="Choice Reaction. Click GREEN only. Ignore Blue/Orange distractions."
           href="/test/reaction-time-hard"
-          icon={Zap} // Or another icon if available, but Zap fits. Maybe AlertTriangle?
+          icon={Zap}
           colorClass="bg-orange-400 hover:bg-orange-300 text-slate-900 shadow-xl shadow-orange-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
           storageKey="reaction_time_hard_score"
           unit="ms"
@@ -55,8 +55,6 @@ export default function Home() {
           unit="Digits"
         />
 
-
-
         <GameColumn
           title="Flash Chimp"
           description="HARD MODE. Numbers disappear instantly. Pure photographic memory."
@@ -81,7 +79,7 @@ export default function Home() {
           title="Verbal Trap"
           description="Semantic interference test. Beware of synonyms and false memories."
           href="/test/verbal-memory-hard"
-          icon={Brain} // Re-using Brain or maybe MessageSquareWarning if imported
+          icon={Brain}
           colorClass="bg-indigo-400 hover:bg-indigo-300 text-slate-900 shadow-xl shadow-indigo-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
           storageKey="verbal_hard_score"
           unit="Words"
@@ -91,12 +89,13 @@ export default function Home() {
           title="Rotating Matrix"
           description="Spacial IQ. Mentally rotate the pattern 90° or 180°."
           href="/test/visual-memory-hard"
-          icon={Grid3X3} // Re-using Grid3x3, fits well for Matrix
+          icon={Grid3X3}
           colorClass="bg-red-500 hover:bg-red-400 text-slate-900 shadow-xl shadow-red-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
           storageKey="visual_hard_score"
           unit="Pts"
         />
 
+        {/* 
         <GameColumn
           title="Chaos Stroop"
           description="Task Switching. Rule changes between COLOR and WORD. No mistakes."
@@ -135,7 +134,9 @@ export default function Home() {
           colorClass="bg-rose-400 hover:bg-rose-300 text-slate-900 shadow-xl shadow-rose-200/50 transition-all duration-300 hover:scale-[1.02] border-none rounded-3xl"
           storageKey="math_fall_score"
           unit="Pts"
-        />
+        /> 
+        */}
+
       </div>
     </main>
   );

@@ -28,6 +28,11 @@ export default function ChimpGameHard() {
     useEffect(() => {
         // Reset purely on load
         useChimpHardStore.getState().resetGame();
+
+        // Reset on cleanup (exit)
+        return () => {
+            useChimpHardStore.getState().resetGame();
+        }
     }, []);
 
     // Phase Management
