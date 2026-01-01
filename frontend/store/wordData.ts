@@ -6,27 +6,6 @@ export interface WordEntry {
 
 // Advanced Vocabulary for Verbal Trap (Hard Mode)
 export const WORD_DATA: WordEntry[] = [
-    { word: "Ephemeral", group: "time", synonyms: ["Transient", "Fleeting", "Momentary", "Brief"] },
-    { word: "Ubiquitous", group: "presence", synonyms: ["Omnipresent", "Pervasive", "Universal", "Global"] },
-    { word: "Serendipity", group: "chance", synonyms: ["Luck", "Fortune", "Fate", "Chance"] },
-    { word: "Paradox", group: "logic", synonyms: ["Contradiction", "Irony", "Enigma", "Puzzle"] },
-    { word: "Mellifluous", group: "sound", synonyms: ["Sweet", "Musical", "Harmonious", "Tuneful"] },
-    { word: "Surreptitious", group: "stealth", synonyms: ["Secret", "Stealthy", "Covert", "Hidden"] },
-    { word: "Perfidious", group: "trust", synonyms: ["Treacherous", "Deceitful", "Disloyal", "False"] },
-    { word: "Magnanimous", group: "personality", synonyms: ["Generous", "Benevolent", "Noble", "Kind"] },
-    { word: "Cacophony", group: "sound", synonyms: ["Noise", "Discord", "Clamor", "Racket"] },
-    { word: "Ennui", group: "emotion", synonyms: ["Boredom", "Lethargy", "Weariness", "Tedium"] },
-    { word: "Pragmatic", group: "philosophy", synonyms: ["Practical", "Realistic", "Sensible", "Rational"] },
-    { word: "Esoteric", group: "knowledge", synonyms: ["Obscure", "Arcane", "Cryptic", "Hidden"] },
-    { word: "Ephemeral", group: "concept", synonyms: ["Temporary", "Short-lived", "Volatile", "Fading"] }, // Duplicate word key? Let's use unique ones.
-    // Replace duplicate Ephemeral logic below manually if any
-
-    { word: "Ephemeral", group: "dummy", synonyms: [] }, // Wait, avoid duplicates.
-    // Let's rewrite cleaner list.
-];
-
-// Re-defining clean list
-const ADVANCED_WORD_DATA: WordEntry[] = [
     { word: "Ephemeral", group: "time", synonyms: ["Transient", "Fleeting", "Momentary", "Evanescent"] },
     { word: "Ubiquitous", group: "presence", synonyms: ["Omnipresent", "Pervasive", "Universal", "Rife"] },
     { word: "Serendipity", group: "luck", synonyms: ["Fortune", "Chance", "Accident", "Providence"] },
@@ -68,5 +47,3 @@ const ADVANCED_WORD_DATA: WordEntry[] = [
     { word: "Salubrious", group: "health", synonyms: ["Healthy", "Beneficial", "Wholesome", "Good"] },
     { word: "Tautology", group: "logic", synonyms: ["Repetition", "Redundancy", "Duplication", "Loop"] },
 ];
-
-export const WORD_DATA = ADVANCED_WORD_DATA;
