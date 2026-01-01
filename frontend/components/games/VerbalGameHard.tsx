@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useVerbalHardStore } from '@/store/useVerbalHardStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ResultModal } from './ResultModal';
-import { MessageSquareWarning } from 'lucide-react'; // Icon for Verbal Trap
+import { MessageSquareWarning, Heart, HeartCrack, BrainCircuit } from 'lucide-react';
 
 export default function VerbalGameHard() {
     const {
@@ -12,19 +12,49 @@ export default function VerbalGameHard() {
         lives,
         status,
         currentWord,
+        feedback,
         startGame,
         makeGuess,
         resetGame
     } = useVerbalHardStore();
 
     const [percentile, setPercentile] = useState<number | undefined>(undefined);
+    const [visualStyle, setVisualStyle] = useState({ color: 'text-slate-800', font: 'font-sans', rotate: 0, scale: 1 });
+    const [shake, setShake] = useState(false);
 
     // Initial load
     useEffect(() => {
-        resetGame(); // Ensure idle
-    }, [resetGame]);
+        resetGame();
+    }, []);
 
-    // Game Over Logic
+    // Visual Noise Effect on Word Change
+    useEffect(() => {
+        if (!currentWord) return;
+
+        const colors = [
+            'text-slate-800', 'text-indigo-900', 'text-rose-900', 'text-emerald-900',
+            'text-blue-900', 'text-violet-900', 'text-amber-900'
+        ];
+        const fonts = ['font-sans', 'font-serif', 'font-mono'];
+
+        setVisualStyle({
+            color: colors[Math.floor(Math.random() * colors.length)],
+            font: fonts[Math.floor(Math.random() * fonts.length)],
+            rotate: (Math.random() * 10) - 5, // -5 to 5 deg
+            scale: 0.9 + Math.random() * 0.2 // 0.9 to 1.1
+        });
+    }, [currentWord]);
+
+    // Feedback Shake
+    useEffect(() => {
+        if (feedback) {
+            setShake(true);
+            const t = setTimeout(() => setShake(false), 500);
+            return () => clearTimeout(t);
+        }
+    }, [feedback]);
+
+    // Save Score
     useEffect(() => {
         if (status === 'result') {
             const saveScore = async () => {
@@ -43,9 +73,7 @@ export default function VerbalGameHard() {
                         const data = await res.json();
                         setPercentile(data.percentile);
                     }
-                } catch (e) {
-                    console.error(e);
-                }
+                } catch (e) { }
             };
             saveScore();
         } else {
@@ -54,70 +82,112 @@ export default function VerbalGameHard() {
     }, [status, score]);
 
     return (
-        <div className="flex flex-col items-center justify-center w-full max-w-4xl mx-auto min-h-[500px]">
+        <div className={`flex flex-col items-center justify-center w-full max-w-4xl mx-auto min-h-[500px] transition-colors duration-500 ${lives === 1 ? 'bg-rose-50/50' : ''}`}>
 
-            <div className="mb-12 flex flex-col items-center gap-2">
-                <div className="flex items-center gap-3 text-indigo-500">
-                    <MessageSquareWarning className="w-8 h-8" />
-                    <h1 className="text-3xl font-bold font-sans tracking-tight">VERBAL TRAP</h1>
+            <div className="mb-8 flex flex-col items-center gap-2">
+                <div className="flex items-center gap-3 text-indigo-600">
+                    <BrainCircuit className="w-10 h-10" />
+                    <h1 className="text-4xl font-black font-sans tracking-tighter">THE LIAR'S DICTIONARY</h1>
                 </div>
-                <p className="text-slate-400 font-medium">Is it NEW? or a SEEN trap?</p>
+                <p className="text-slate-500 font-medium">Verbal Trap Mode</p>
             </div>
 
             {/* Lives / Score */}
-            <div className="flex items-center gap-8 mb-8 text-xl font-bold text-slate-700">
-                <div className="flex flex-col items-center">
-                    <span className="text-xs uppercase tracking-widest text-slate-400">Score</span>
-                    <span className="text-3xl">{score}</span>
+            <div className="flex items-center justify-between w-full max-w-lg mb-4 px-4">
+                <div className="flex flex-col items-start">
+                    <span className="text-xs uppercase tracking-widest text-slate-400 font-bold">Score</span>
+                    <span className="text-3xl font-black text-slate-700">{score}</span>
                 </div>
-                <div className="flex flex-col items-center">
-                    <span className="text-xs uppercase tracking-widest text-slate-400">Lives</span>
-                    <span className={lives === 0 ? "text-rose-500" : "text-emerald-500"}>
-                        {lives}/1
-                    </span>
+
+                <div className="flex items-center gap-1">
+                    {[...Array(3)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ scale: 1 }}
+                            animate={{ scale: i < lives ? 1 : 0.8, opacity: i < lives ? 1 : 0.2 }}
+                        >
+                            {i < lives ? (
+                                <Heart className="w-8 h-8 text-rose-500 fill-rose-500 drop-shadow-sm" />
+                            ) : (
+                                <HeartCrack className="w-8 h-8 text-slate-300" />
+                            )}
+                        </motion.div>
+                    ))}
                 </div>
             </div>
 
-            <div className="relative w-full max-w-lg aspect-square md:aspect-[4/3] bg-white rounded-3xl shadow-2xl shadow-indigo-200/50 flex flex-col items-center justify-center p-8 border border-indigo-50">
+            <div className="relative w-full max-w-lg aspect-[4/3] bg-white rounded-[2rem] shadow-2xl shadow-indigo-200/40 flex flex-col items-center justify-center p-8 border-4 border-white ring-1 ring-slate-100">
 
                 <ResultModal
                     isOpen={status === 'result'}
                     score={score}
                     unit="Words"
-                    gameType="Verbal Trap"
+                    gameType="The Liar's Dictionary"
                     onRetry={startGame}
                     percentile={percentile}
                 />
+
+                {/* Feedback Overlay */}
+                <AnimatePresence>
+                    {feedback && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute top-6 px-4 py-2 bg-rose-100 text-rose-600 rounded-full text-sm font-bold shadow-sm z-10"
+                        >
+                            {feedback}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {status === 'idle' && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-center"
+                        className="text-center z-10"
                     >
-                        <p className="text-slate-500 mb-8 leading-relaxed">
-                            A word will appear.<br />
-                            If you've seen it before, click <strong>SEEN</strong>.<br />
-                            If it's new, click <strong>NEW</strong>.<br />
-                            <span className="text-rose-500 font-bold">Beware of similar meanings.</span>
-                        </p>
+                        <div className="bg-indigo-50 p-6 rounded-2xl mb-8 border border-indigo-100">
+                            <h3 className="text-indigo-900 font-bold mb-4 text-lg">The 3 Traps</h3>
+                            <ul className="text-left text-indigo-800/80 space-y-2 text-sm">
+                                <li className="flex items-start gap-2">
+                                    <span className="text-xl">🎭</span>
+                                    <span><strong>Synonym Trap:</strong> Similar meaning words may appear. They are NEW unless exact match.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-xl">🎨</span>
+                                    <span><strong>Visual Noise:</strong> Colors and fonts will change. Ignore them.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-xl">❤️</span>
+                                    <span><strong>Life System:</strong> Traps deal double damage.</span>
+                                </li>
+                            </ul>
+                        </div>
                         <button
                             onClick={startGame}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-12 rounded-2xl shadow-lg transition-all text-xl"
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 px-12 rounded-2xl shadow-xl shadow-indigo-200 transition-all text-xl hover:scale-105 active:scale-95"
                         >
-                            Start Test
+                            START CHALLENGE
                         </button>
                     </motion.div>
                 )}
 
                 {status === 'playing' && (
                     <div className="flex flex-col items-center w-full h-full justify-between">
-                        <div className="flex-1 flex items-center justify-center">
+                        <div className="flex-1 flex items-center justify-center w-full">
                             <motion.h2
-                                key={currentWord} // Trigger animation on word change
-                                initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                className="text-5xl md:text-6xl font-black text-slate-800 tracking-tight"
+                                key={currentWord}
+                                initial={{ scale: 0.5, opacity: 0, filter: 'blur(10px)' }}
+                                animate={{
+                                    scale: visualStyle.scale,
+                                    opacity: 1,
+                                    filter: 'blur(0px)',
+                                    rotate: visualStyle.rotate,
+                                    x: shake ? [0, -10, 10, -10, 10, 0] : 0
+                                }}
+                                transition={{ type: 'spring', bounce: 0.5 }}
+                                className={`text-5xl md:text-6xl font-black tracking-tight ${visualStyle.color} ${visualStyle.font}`}
                             >
                                 {currentWord}
                             </motion.h2>
@@ -126,20 +196,21 @@ export default function VerbalGameHard() {
                         <div className="grid grid-cols-2 gap-4 w-full">
                             <button
                                 onClick={() => makeGuess('SEEN')}
-                                className="bg-amber-400 hover:bg-amber-300 text-amber-900 font-bold py-6 rounded-2xl text-2xl shadow-lg transition-transform active:scale-95 border-b-4 border-amber-600 active:border-b-0 active:translate-y-1"
+                                className="group relative bg-amber-100 hover:bg-amber-200 text-amber-900 font-black py-6 rounded-2xl text-2xl transition-all active:scale-95 overflow-hidden"
                             >
-                                SEEN
+                                <span className="relative z-10">SEEN</span>
+                                <div className="absolute inset-0 bg-amber-300/0 group-hover:bg-amber-300/20 transition-colors" />
                             </button>
                             <button
                                 onClick={() => makeGuess('NEW')}
-                                className="bg-emerald-400 hover:bg-emerald-300 text-emerald-900 font-bold py-6 rounded-2xl text-2xl shadow-lg transition-transform active:scale-95 border-b-4 border-emerald-600 active:border-b-0 active:translate-y-1"
+                                className="group relative bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-black py-6 rounded-2xl text-2xl transition-all active:scale-95 overflow-hidden"
                             >
-                                NEW
+                                <span className="relative z-10">NEW</span>
+                                <div className="absolute inset-0 bg-emerald-300/0 group-hover:bg-emerald-300/20 transition-colors" />
                             </button>
                         </div>
                     </div>
                 )}
-
             </div>
         </div>
     );
