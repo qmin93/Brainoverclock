@@ -1,11 +1,14 @@
 "use client";
 
-import SchulteGame from '@/components/games/SchulteGame';
+import { Suspense } from "react";
+import SchulteGame from "@/components/games/SchulteGame";
 
-export default function SchultePage() {
+export default function SchulteTablePage() {
     return (
-        <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <SchulteGame />
+        <main className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+            <Suspense fallback={<div>Loading...</div>}>
+                <SchulteGame />
+            </Suspense>
         </main>
     );
 }
