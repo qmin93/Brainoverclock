@@ -18,15 +18,9 @@ export default function ShareResult({ gameTitle, score, tier, gameUrl }: ShareRe
             ? window.location.origin
             : "https://brainoverclock-frontend-8h7h.vercel.app";
 
-        const params = new URLSearchParams();
-        params.set('share', 'true');
-        params.set('score', score.toString());
-        params.set('tier', tier);
-        params.set('game', gameTitle);
-
         const urlToShare = gameUrl
-            ? `${baseUrl}${gameUrl}?${params.toString()}`
-            : `${baseUrl}?${params.toString()}`;
+            ? `${baseUrl}${gameUrl}`
+            : baseUrl;
 
         return `🧠 **BRAIN OVERCLOCK CHALLENGE** 🧠\n\n` +
             `🎮 Game: ${gameTitle}\n` +

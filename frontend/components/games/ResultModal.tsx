@@ -47,18 +47,21 @@ const GAME_URL_MAP: Record<string, string> = {
     "Chaos Hunter": "/test/aim-trainer-hard",
     "Verbal Trap": "/test/verbal-memory-hard",
     "The Liar's Dictionary": "/test/verbal-memory-hard",
-    "Verbal Memory": "/test/number-memory",
+    "Verbal Memory": "/test/verbal-memory-hard",
     "Stroop Hard": "/test/stroop-test-hard",
     "Stroop Task": "/test/stroop-test-hard",
+    "Chaos Stroop": "/test/stroop-test-hard",
     "Visual Memory Hard": "/test/visual-memory-hard",
     "Visual Memory": "/test/visual-memory-hard",
     "Type Flow": "/test/type-flow",
     "Number Memory": "/test/number-memory",
+    "Sequence Memory Hard": "/test/sequence-memory",
     "Sequence Memory": "/test/sequence-memory",
     "Schulte Grid": "/test/schulte-table",
     "Math Fall": "/test/math-fall",
     "Reaction Time (Hard)": "/test/reaction-time-hard",
-    "Reaction Time": "/test/reaction-time"
+    "Reaction Time": "/test/reaction-time",
+    "Dual N-Back": "/test/dual-n-back"
 };
 
 const getTier = (gameType: string, score: number): { name: string; icon: string; color: string } => {
@@ -244,12 +247,23 @@ export function ResultModal({
 
                             {/* Share & Buttons */}
                             <div className="mb-4">
-                                <ShareResult
-                                    gameTitle={displayGameType}
-                                    score={`${displayScore} ${unit}`}
-                                    tier={`${tier.icon} ${tier.name}`}
-                                    gameUrl={GAME_URL_MAP[displayGameType]}
-                                />
+                                {(() => {
+                                    // Robust base title matching: find the longest key that matches displayGameType
+                                    const matchingKeys = Object.keys(GAME_URL_MAP).filter(key => displayGameType.includes(key));
+                                    const baseGameTitle = matchingKeys.sort((a, b) => b.length - a.length)[0] || displayGameType;
+
+                                    const basePath = GAME_URL_MAP[baseGameTitle] || "/";
+                                    const shareUrl = `${basePath}?share=true&score=${displayScore}&game=${encodeURIComponent(displayGameType)}&tier=${encodeURIComponent(tier.name)}`;
+
+                                    return (
+                                        <ShareResult
+                                            gameTitle={displayGameType}
+                                            score={`${displayScore} ${unit}`}
+                                            tier={`${tier.icon} ${tier.name}`}
+                                            gameUrl={shareUrl}
+                                        />
+                                    );
+                                })()}
                             </div>
 
                             {/* Challenge Banner */}
