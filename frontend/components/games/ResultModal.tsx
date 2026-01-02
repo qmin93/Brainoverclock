@@ -24,6 +24,7 @@ const GAME_ID_MAP: Record<string, string> = {
     "Aim Trainer Hard": "aim_hard",
     "Aim Trainer": "aim_trainer",
     "Project: Chaos Hunter": "aim_hard",
+    "Chaos Hunter": "aim_hard",
     "Verbal Trap": "verbal_hard",
     "The Liar's Dictionary": "verbal_hard",
     "Verbal Memory": "verbal_memory",
@@ -43,16 +44,21 @@ const GAME_URL_MAP: Record<string, string> = {
     "Aim Trainer Hard": "/test/aim-trainer-hard",
     "Aim Trainer": "/test/aim-trainer",
     "Project: Chaos Hunter": "/test/aim-trainer-hard",
+    "Chaos Hunter": "/test/aim-trainer-hard",
     "Verbal Trap": "/test/verbal-memory-hard",
     "The Liar's Dictionary": "/test/verbal-memory-hard",
-    "Verbal Memory": "/test/number-memory", // Assuming default or check others
+    "Verbal Memory": "/test/number-memory",
     "Stroop Hard": "/test/stroop-test-hard",
+    "Stroop Task": "/test/stroop-test-hard",
     "Visual Memory Hard": "/test/visual-memory-hard",
+    "Visual Memory": "/test/visual-memory-hard",
     "Type Flow": "/test/type-flow",
     "Number Memory": "/test/number-memory",
     "Sequence Memory": "/test/sequence-memory",
     "Schulte Grid": "/test/schulte-table",
-    "Math Fall": "/test/math-fall"
+    "Math Fall": "/test/math-fall",
+    "Reaction Time (Hard)": "/test/reaction-time-hard",
+    "Reaction Time": "/test/reaction-time"
 };
 
 const getTier = (gameType: string, score: number): { name: string; icon: string; color: string } => {
