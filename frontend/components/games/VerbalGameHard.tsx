@@ -5,6 +5,7 @@ import { useVerbalHardStore } from '@/store/useVerbalHardStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ResultModal } from './ResultModal';
 import { MessageSquareWarning, Heart, HeartCrack, BrainCircuit } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 export default function VerbalGameHard() {
     const {
@@ -21,6 +22,25 @@ export default function VerbalGameHard() {
     const [percentile, setPercentile] = useState<number | undefined>(undefined);
     const [visualStyle, setVisualStyle] = useState({ color: 'text-slate-800', font: 'font-sans', rotate: 0, scale: 1 });
     const [shake, setShake] = useState(false);
+
+    const searchParams = useSearchParams();
+    const [sharedResult, setSharedResult] = useState<{ score: number, game: string, tier: string } | null>(null);
+
+    // Check for shared challenge
+    useEffect(() => {
+        const isShare = searchParams.get('share') === 'true';
+        if (isShare) {
+            const s = parseInt(searchParams.get('score') || '0');
+            const g = searchParams.get('game') || '';
+            const t = searchParams.get('tier') || '';
+            setSharedResult({ score: s, game: g, tier: t });
+        }
+    }, [searchParams]);
+
+    const handleRetry = () => {
+        setSharedResult(null);
+        startGame();
+    };
 
     // Initial load
     useEffect(() => {
@@ -121,13 +141,24 @@ export default function VerbalGameHard() {
             <div className="relative w-full max-w-lg aspect-[4/3] bg-white rounded-[2rem] shadow-2xl shadow-indigo-200/40 flex flex-col items-center justify-center p-8 border-4 border-white ring-1 ring-slate-100">
 
                 <ResultModal
-                    isOpen={status === 'result'}
-                    score={score}
+                    isOpen={status === 'result' || sharedResult !== null}
+                    score={sharedResult ? sharedResult.score : score}
                     unit="Words"
-                    gameType="The Liar's Dictionary"
-                    onRetry={startGame}
+                    gameType={sharedResult ? sharedResult.game : "The Liar's Dictionary"}
+                    onRetry={handleRetry}
                     percentile={percentile}
-                />
+                >
+                    {sharedResult && (
+                        <div className="mt-4 px-6 py-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl">
+                            <p className="text-indigo-400 font-bold text-sm">
+                                🥊 CHALLENGE RECEIVED! 🥊
+                            </p>
+                            <p className="text-slate-400 text-xs mt-1">
+                                Someone challenged you to beat their score of {sharedResult.score}.
+                            </p>
+                        </div>
+                    )}
+                </ResultModal>
 
                 {/* Feedback Overlay */}
                 <AnimatePresence>

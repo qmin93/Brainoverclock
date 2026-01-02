@@ -14,12 +14,19 @@ interface ShareResultProps {
 export default function ShareResult({ gameTitle, score, tier, gameUrl }: ShareResultProps) {
     // 1. 공유할 텍스트 생성 함수
     const getShareText = () => {
-        // 브라우저(window)가 있으면 현재 주소를 쓰고, 없으면 기본 주소를 씀
         const baseUrl = typeof window !== 'undefined'
             ? window.location.origin
-            : "https://brain-overclock.vercel.app";
+            : "https://brainoverclock-frontend-8h7h.vercel.app";
 
-        const urlToShare = gameUrl ? `${baseUrl}${gameUrl}` : baseUrl;
+        const params = new URLSearchParams();
+        params.set('share', 'true');
+        params.set('score', score.toString());
+        params.set('tier', tier);
+        params.set('game', gameTitle);
+
+        const urlToShare = gameUrl
+            ? `${baseUrl}${gameUrl}?${params.toString()}`
+            : `${baseUrl}?${params.toString()}`;
 
         return `🧠 **BRAIN OVERCLOCK CHALLENGE** 🧠\n\n` +
             `🎮 Game: ${gameTitle}\n` +

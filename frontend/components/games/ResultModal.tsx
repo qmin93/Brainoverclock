@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw, Home, Trophy, Grip } from "lucide-react";
+import { RotateCcw, Home, Trophy, Grip, Swords } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams } from "next/navigation";
 import ShareResult from "../ShareResult";
 
 interface ResultModalProps {
@@ -24,6 +25,7 @@ const GAME_ID_MAP: Record<string, string> = {
     "Aim Trainer": "aim_trainer",
     "Project: Chaos Hunter": "aim_hard",
     "Verbal Trap": "verbal_hard",
+    "The Liar's Dictionary": "verbal_hard",
     "Verbal Memory": "verbal_memory",
     "Stroop Hard": "stroop_hard",
     "Stroop Task": "stroop_task",
@@ -42,6 +44,7 @@ const GAME_URL_MAP: Record<string, string> = {
     "Aim Trainer": "/test/aim-trainer",
     "Project: Chaos Hunter": "/test/aim-trainer-hard",
     "Verbal Trap": "/test/verbal-memory-hard",
+    "The Liar's Dictionary": "/test/verbal-memory-hard",
     "Verbal Memory": "/test/number-memory", // Assuming default or check others
     "Stroop Hard": "/test/stroop-test-hard",
     "Visual Memory Hard": "/test/visual-memory-hard",
@@ -106,15 +109,26 @@ export function ResultModal({
     children,
 }: ResultModalProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState<'report' | 'leaderboard'>('report');
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const [isLoadingLb, setIsLoadingLb] = useState(false);
 
-    const tier = getTier(gameType, score);
-    const backendGameId = GAME_ID_MAP[gameType] || gameType.toLowerCase().replace(/ /g, '_');
+    // Support for shared results via URL
+    const isShareMode = searchParams.get('share') === 'true';
+    const sharedScore = parseInt(searchParams.get('score') || '0');
+    const sharedGame = searchParams.get('game') || '';
+    const sharedTier = searchParams.get('tier') || '';
+
+    const effectiveIsOpen = isOpen || isShareMode;
+    const displayScore = isShareMode && !isOpen ? sharedScore : score;
+    const displayGameType = isShareMode && !isOpen ? sharedGame : gameType;
+
+    const tier = getTier(displayGameType, displayScore);
+    const backendGameId = GAME_ID_MAP[displayGameType] || displayGameType.toLowerCase().replace(/ /g, '_');
 
     useEffect(() => {
-        if (isOpen) {
+        if (effectiveIsOpen) {
             // Always fetch leaderboard on open (for desktop view compatibility)
             setIsLoadingLb(true);
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5328';
@@ -126,14 +140,23 @@ export function ResultModal({
                 .catch(err => console.error("Failed to load leaderboard", err))
                 .finally(() => setIsLoadingLb(false));
         }
-    }, [isOpen, backendGameId]);
+    }, [effectiveIsOpen, backendGameId]);
 
     // Reset tab on open
     useEffect(() => {
-        if (isOpen) setActiveTab('report');
-    }, [isOpen]);
+        if (effectiveIsOpen) setActiveTab('report');
+    }, [effectiveIsOpen]);
 
-    if (!isOpen) return null;
+    const handleRetry = () => {
+        if (isShareMode) {
+            // Clear search params on retry/challenge
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+        }
+        onRetry();
+    };
+
+    if (!effectiveIsOpen) return null;
 
     return (
         <AnimatePresence>
@@ -154,7 +177,13 @@ export function ResultModal({
 
                     {/* Header */}
                     <div className="relative mb-6">
-                        <h2 className="text-2xl font-black text-white tracking-tight uppercase">{gameType}</h2>
+                        {isShareMode && !isOpen && (
+                            <div className="flex items-center justify-center gap-2 mb-2 py-1 px-4 bg-indigo-500 text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] w-fit mx-auto shadow-lg shadow-indigo-500/20">
+                                <Swords size={12} strokeWidth={3} />
+                                Challenge Received
+                            </div>
+                        )}
+                        <h2 className="text-2xl font-black text-white tracking-tight uppercase">{displayGameType}</h2>
 
                         {/* Tabs (Mobile Only) */}
                         <div className="flex justify-center mt-4 bg-slate-800 p-1 rounded-full w-full md:hidden">
@@ -186,9 +215,11 @@ export function ResultModal({
                             {/* Score Card */}
                             <div id="score-card-capture" className="bg-slate-800/50 rounded-2xl p-6 mb-6 border border-slate-700 relative overflow-hidden text-center">
                                 <div className="flex flex-col items-center">
-                                    <span className="text-slate-400 text-xs uppercase font-bold mb-2">Final Score</span>
+                                    <span className="text-slate-400 text-xs uppercase font-bold mb-2">
+                                        {isShareMode && !isOpen ? "Goal to Beat" : "Final Score"}
+                                    </span>
                                     <div className="text-6xl font-black text-white leading-none tracking-tighter mb-2">
-                                        {score}
+                                        {displayScore}
                                         <span className="text-lg text-slate-500 ml-1 font-medium">{unit}</span>
                                     </div>
                                     <div className="mt-4 flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-full border border-slate-700 shadow-inner">
@@ -208,21 +239,33 @@ export function ResultModal({
                             {/* Share & Buttons */}
                             <div className="mb-4">
                                 <ShareResult
-                                    gameTitle={gameType}
-                                    score={`${score} ${unit}`}
+                                    gameTitle={displayGameType}
+                                    score={`${displayScore} ${unit}`}
                                     tier={`${tier.icon} ${tier.name}`}
-                                    gameUrl={GAME_URL_MAP[gameType]}
+                                    gameUrl={GAME_URL_MAP[displayGameType]}
                                 />
                             </div>
+
+                            {/* Challenge Banner */}
+                            {isShareMode && !isOpen && (
+                                <div className="bg-slate-800/80 rounded-xl p-4 mb-4 border border-indigo-500/30 text-center animate-pulse">
+                                    <p className="text-indigo-400 font-bold text-xs uppercase tracking-wider">
+                                        Can you do better?
+                                    </p>
+                                    <p className="text-slate-500 text-[10px] mt-1 italic">
+                                        Click START to take the challenge
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Navigation Buttons (Desktop: Bottom of Left Col, Mobile: Bottom of Modal) */}
                             <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800">
                                 <button
-                                    onClick={onRetry}
-                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:text-white"
+                                    onClick={handleRetry}
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-600/20"
                                 >
-                                    <RotateCcw className="w-4 h-4" />
-                                    <span>Retry</span>
+                                    {isShareMode && !isOpen ? <Swords className="w-4 h-4" /> : <RotateCcw className="w-4 h-4" />}
+                                    <span>{isShareMode && !isOpen ? 'START' : 'Retry'}</span>
                                 </button>
                                 <button
                                     onClick={() => router.push('/')}
@@ -294,11 +337,11 @@ export function ResultModal({
                             {/* Let's replicate Nav buttons for Mobile Leaderboard Tab convenience */}
                             <div className="md:hidden grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-800">
                                 <button
-                                    onClick={onRetry}
-                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2"
+                                    onClick={handleRetry}
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2"
                                 >
-                                    <RotateCcw className="w-4 h-4" />
-                                    <span>Retry</span>
+                                    {isShareMode && !isOpen ? <Swords className="w-4 h-4" /> : <RotateCcw className="w-4 h-4" />}
+                                    <span>{isShareMode && !isOpen ? 'START' : 'Retry'}</span>
                                 </button>
                                 <button
                                     onClick={() => router.push('/')}
