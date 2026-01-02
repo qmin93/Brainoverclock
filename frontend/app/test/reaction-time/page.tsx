@@ -7,7 +7,7 @@ export default function ReactionTimePage() {
     return (
         <main className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
             <Suspense fallback={<div>Loading...</div>}>
-                <ReactionGameHard difficulty="easy" />
+                <ReactionGameHard />
             </Suspense>
         </main>
     );
